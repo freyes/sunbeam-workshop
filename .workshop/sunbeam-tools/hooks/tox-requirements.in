@@ -1,0 +1,5 @@
+# Top-level pins for the sunbeam container's tox install (draft D-5: tox
+# 4.47.3 matches sunbeam-charms CI); tox-uv makes tox build its environments
+# with uv. Regenerate tox-requirements.txt after editing (see its header).
+tox==4.47.3
+tox-uv

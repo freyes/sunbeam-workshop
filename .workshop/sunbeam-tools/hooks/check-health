@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# check-health for the sunbeam-tools SDK (runs as root). Gates on everything
+# setup-base and setup-project provision; every failure path reports
+# workshopctl set-health --code=<reason> error, mirroring the ck8s-dev
+# check-health style, and the hook ends with set-health okay.
+
+set -euo pipefail
+
+workshop_user="$(getent passwd 1000 | cut -d: -f1)"
+if [ -z "$workshop_user" ]; then
+    workshopctl set-health --code=missing-workshop-user error \
+        "unable to resolve workshop user for uid 1000"
+    exit 1
+fi
+
+# opencode (opencode SDK) and tox (setup-project's venv symlink) are per-user
+# tools - probe them through a workshop-user login shell, which also picks up
+# /etc/profile.d/uv.sh for the uv SDK.
+for tool in opencode tox; do
+    if ! sudo -u "$workshop_user" bash -lc "command -v $tool" >/dev/null 2>&1; then
+        workshopctl set-health --code="missing-$tool" error \
+            "$tool is not on PATH for $workshop_user"
+        exit 1
+    fi
+done
+
+# Craft tooling: pinned snaps installed by setup-base (on the system PATH via
+# /snap/bin in this login shell).
+for tool in charmcraft snapcraft rockcraft juju; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        workshopctl set-health --code=missing-craft-tooling error \
+            "$tool is not on PATH; setup-base installs it as a pinned snap"
+        exit 1
+    fi
+done
+
+# uv-managed CPython 3.10/3.12 for the sunbeam tox envs (draft D-18).
+for py in 3.10 3.12; do
+    if ! sudo -u "$workshop_user" bash -lc "uv python find $py" >/dev/null 2>&1; then
+        workshopctl set-health --code=missing-uv-pythons error \
+            "uv-managed CPython $py not found for $workshop_user; setup-project runs install_uv_pythons"
+        exit 1
+    fi
+done
+
+# openstack-agentic-skills clone + symlink (draft D-10); [ -e ] follows the
+# symlink, so a dangling link fails this gate.
+skills_link="/home/$workshop_user/.config/opencode/skills/openstack-agentic-skills"
+if [ ! -e "$skills_link" ]; then
+    workshopctl set-health --code=missing-agentic-skills error \
+        "$skills_link does not resolve; setup-project runs install_agentic_skills"
+    exit 1
+fi
+
+# Git identity applied from /project/.state/<name>.vars.json.
+if ! sudo -u "$workshop_user" git config --global user.name >/dev/null 2>&1; then
+    workshopctl set-health --code=missing-git-identity error \
+        "git user.name is not set for $workshop_user; setup-project applies it from /project/.state/<name>.vars.json"
+    exit 1
+fi
+
+workshopctl set-health okay

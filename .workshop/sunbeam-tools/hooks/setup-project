@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# setup-project for the sunbeam-tools SDK (runs as the workshop user,
+# post-mount; working directory is /project).
+#
+# Every provisioning step lives in the tracked /project/scripts/hooks/
+# lib-common.sh and is SOURCED, never duplicated here (drafts D-5, D-9,
+# D-10, D-18). No secrets in this hook; `uv tool install` is forbidden
+# (it ignores hashes) - the tox venv is built with --require-hashes from
+# the vendored tox-requirements.txt.
+
+set -euo pipefail
+
+# shellcheck source=scripts/hooks/lib-common.sh
+. /project/scripts/hooks/lib-common.sh
+
+HOOK_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
+
+# Provisioning failures are loud but do not abort the hook: check-health is
+# the authoritative gate and names the missing piece via workshopctl
+# set-health --code (ck8s-dev setup-project.base pattern - a swallowed
+# failure once left a "ready" workshop without its Python test tooling).
+run_step() {
+    local label="$1"
+    shift
+    if ! "$@"; then
+        echo "ERROR: ${label} failed; check-health will report it" >&2
+    fi
+}
+
+# CPython 3.10 and 3.12 for the sunbeam tox envs (py310/py312; the 26.04 base
+# ships only python3.14) - draft D-18, interpreters discovered via tox-uv.
+run_step "install_uv_pythons 3.10 3.12" install_uv_pythons 3.10 3.12
+
+# tox==4.47.3 + tox-uv (sunbeam CI pin) in its own venv, tox symlinked into
+# ~/.local/bin; rebuilt only when the vendored requirements file changes.
+run_step "build_tox_venv" build_tox_venv \
+    "$HOOK_DIR/tox-requirements.txt" \
+    "$HOME/.local/share/sunbeam-workshop/tox-venv"
+
+# Atlassian MCP server entry in the global opencode config (draft D-9).
+run_step "seed_atlassian_mcp" seed_atlassian_mcp
+
+# canonical/openstack-agentic-skills clone + skills symlink (draft D-10).
+run_step "install_agentic_skills" install_agentic_skills
+
+# Pin ssh host keys for github.com, review.opendev.org, git.launchpad.net;
+# warns and succeeds until scripts/pin-host-keys.sh lands (draft D-8).
+run_step "pin_forge_host_keys" pin_forge_host_keys
+
+# Git identity from the merged vars doc persisted by `just setup` at
+# /project/.state/<name>.vars.json. The hook environment does not carry the
+# workshop name (the runtime-hook contract provides only $SDK, $HOME,
+# $XDG_RUNTIME_DIR and $DBUS_SESSION_BUS_ADDRESS), but every running workshop
+# gets the friendly hostname <WORKSHOP>.<PROJECT>.wp, so the instance name is
+# the first hostname label.
+workshop_name="$(hostname)"
+workshop_name="${workshop_name%.wp}"
+workshop_name="${workshop_name%%.*}"
+vars_doc="/project/.state/${workshop_name}.vars.json"
+if [ -f "$vars_doc" ]; then
+    run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
+else
+    echo "WARNING: $vars_doc not found; skipping git identity." >&2
+    echo "  Persist it with 'just setup ${workshop_name}' on the host before a manual launch." >&2
+fi

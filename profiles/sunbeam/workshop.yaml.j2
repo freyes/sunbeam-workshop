@@ -1,0 +1,23 @@
+# Workshop definition template for the sunbeam profile (drafts D-3, D-8, D-9).
+#
+# Composed ONLY from the shared partials (profiles/_partials/, linked into
+# this dir as partials/) per the include-block contract:
+#   1. system-secret first under `sdks:` (opens the `- name: system` entry);
+#   2. oauth-tunnel with oauth_tunnel_part = 'plug' nests the tunnel plug
+#      under that same system entry;
+#   3. sdks-chain renders opencode -> openchamber@latest/edge -> gh-cli ->
+#      uv@latest/stable -> project-sunbeam-tools;
+#   4. ssh-agent immediately after, so the graft nests under
+#      project-sunbeam-tools;
+#   5. oauth-tunnel with oauth_tunnel_part = 'connections' under
+#      `connections:` (gh-cli:github-token -> system:github-token and
+#      system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback).
+name: {{ workshop_name }}
+base: ubuntu@26.04
+sdks:
+{% include 'partials/system-secret.yaml.j2' -%}
+{% set oauth_tunnel_part = 'plug' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}
+{% include 'partials/sdks-chain.yaml.j2' -%}
+{% include 'partials/ssh-agent.yaml.j2' -%}
+connections:
+{% set oauth_tunnel_part = 'connections' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}

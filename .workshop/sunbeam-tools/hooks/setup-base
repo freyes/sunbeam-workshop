@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# setup-base for the sunbeam-tools SDK (runs as root, pre-mount).
+#
+# SELF-CONTAINED: /project is NOT mounted when this hook runs, so it must not
+# reference anything from the repo. The snap pins below mirror
+# profiles/sunbeam/vars.json ("snaps") - CI-true pins from sunbeam-charms
+# (zuul.d/zuul.yaml: charmcraft latest/stable, juju 3.6/stable) plus the
+# 2026.2 craft toolchain (drafts D-4/A-6). microk8s (vars.json "k8s") is
+# deliberately NOT installed here: it lands on the sidecar dev VM (D-11).
+
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Baseline packages. Nothing a snap pin below covers may be apt-installed
+# (e.g. no golang-go: go comes from the pinned go snap).
+pkgs=(
+  ca-certificates
+  curl
+  git
+  gnupg
+  jq
+  python3
+  python3-yaml
+  rsync
+  shellcheck
+  wget
+)
+
+apt-get update
+apt-get install -y --no-install-recommends "${pkgs[@]}"
+
+# install_snap <name> <channel> [--classic] - install when absent, align the
+# channel when already present: `snap install` hard-fails on an installed
+# snap, and this hook re-runs when the SDK's base snapshot is invalidated.
+install_snap() {
+    local name="$1" channel="$2" classic="${3:-}"
+    local args=(--channel="$channel")
+    if [ -n "$classic" ]; then
+        args+=("$classic")
+    fi
+    if snap list "$name" >/dev/null 2>&1; then
+        snap refresh "$name" "${args[@]}"
+    else
+        snap install "$name" "${args[@]}"
+    fi
+}
+
+# Pinned per profiles/sunbeam/vars.json "snaps".
+install_snap charmcraft latest/stable --classic
+install_snap snapcraft latest/stable --classic
+install_snap rockcraft latest/stable --classic
+install_snap juju 3.6/stable
+install_snap go 1.27/stable --classic
+install_snap astral-uv latest/stable --classic
+
+# ssh-agent as a systemd user unit (per ck8s-dev
+# .workshop/ck8s-dev-tools/hooks/setup-base.base lines 44-62): the agent the
+# workshop's ssh-agent plug and local ssh-add flows talk to.
+cat << 'EOF' > /etc/systemd/user/ssh-agent.service
+[Unit]
+Description=SSH key agent
+
+[Service]
+Type=simple
+Environment=SSH_AUTH_SOCK=%t/ssh-agent.socket
+ExecStart=/usr/bin/ssh-agent -D -a $SSH_AUTH_SOCK
+
+[Install]
+WantedBy=default.target
+EOF
+
+mkdir -p /etc/systemd/user/default.target.wants
+ln -sf /etc/systemd/user/ssh-agent.service \
+  /etc/systemd/user/default.target.wants/ssh-agent.service
+
+echo "export SSH_AUTH_SOCK=\"\${XDG_RUNTIME_DIR}/ssh-agent.socket\"" > \
+  /etc/profile.d/ssh-agent.sh
