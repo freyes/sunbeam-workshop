@@ -1,0 +1,14 @@
+# Launchpad's published git SSH host key.
+#
+# Source: "SSH fingerprints" in the Launchpad manual:
+#   https://ubuntu.com/docs/launchpad/user/reference/ssh-fingerprints/
+#     git.launchpad.net (RSA)  SHA256:UNOzlP66WpDuEo34Wgs8mewypV0UzqHLsIFoqwe8dYo
+# Vendored 2026-11-13 by scanning git.launchpad.net:22 and verifying the
+# key's SHA256 fingerprint against the source above. git.launchpad.net
+# offers only an RSA host key (the service now negotiates rsa-sha2-256/512
+# signatures for it).
+#
+# If ssh-keyscan output stops matching this file, do NOT blind-update: verify
+# the new fingerprint out-of-band against the source above first (MITM
+# guard, see scripts/pin-host-keys.sh).
+git.launchpad.net ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDEFREwBD2ye2Xrc2SVcUmmJ44MF1BCB3W11NTaiqzVj7XZnQmgWZk9UadHVY2wBXvelcDO51MPN5ozJjFAknw09rP7XMRJMlAOLSIVoU6DRF1u1j8kJVY+dfiDHheS7+siADnrmb8HGn2xQQ6EJDjAXrw1x58x5eZjQ0PFWdI+pRTdYGvWkpHdXKFO6a9/lDx4uo9MCnePEGi/QnkCmKqLCBUlYNZYRiB8nVee2tMF0mjV8xk1rJ+/UP+897+FXFR9w/B1EPRjiQ35ZNQZKPP4isxPtyMuCQkZY7ckWr5YsylNfvNcyGDnO1XazZhJ71rzDpi1RmnFXBW5i+2dm2y7

@@ -96,8 +96,8 @@ install_agentic_skills() {
 # pin_forge_host_keys - pin ssh host keys for github.com, review.opendev.org
 # and git.launchpad.net via scripts/pin-host-keys.sh (generalized from
 # ck8s-dev's pin-github-host-keys.sh; fails loudly on a fingerprint
-# mismatch - MITM guard). The script lands with the secrets work item;
-# until then this warns and succeeds so setup-project keeps converging.
+# mismatch - MITM guard). The missing-script guard keeps setup-project
+# converging in partial checkouts where the secrets work item is absent.
 pin_forge_host_keys() {
     local script="${1:-/project/scripts/pin-host-keys.sh}"
     if [ ! -f "$script" ]; then
