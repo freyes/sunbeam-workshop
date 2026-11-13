@@ -14,8 +14,9 @@
 #   3. render profiles/<profile>/workshop.yaml.j2 with jinja2-cli (file form:
 #      the first positional is a template PATH) to a temp output inside
 #      .workshop/ - same filesystem, so the publish below is an atomic rename
-#   4. post-validate with python3: yaml.safe_load parses, top-level name:
-#      equals NAME, base: present - the target is never written on failure
+#   4. post-validate with the uv-managed python: yaml.safe_load parses,
+#      top-level name: equals NAME, base: present - the target is never
+#      written on failure
 #   5. atomically mv the temp output to .workshop/<NAME>.yaml
 #
 # Re-rendering the same NAME overwrites deterministically (idempotent).
@@ -111,7 +112,10 @@ OUT_TMP="$(mktemp "$ROOT/.workshop/.render.XXXXXX")"
 "$SCRIPT_DIR/jinja2" "$template" "$VARS_TMP" > "$OUT_TMP"
 
 # 4. Post-validate: parse the render, require name: == NAME and a base: key.
-if ! validation_error="$(python3 - "$OUT_TMP" "$name" 2>&1 <<'PY'
+# Run it under the uv project env, which supplies pyyaml as a declared
+# dependency: the SYSTEM python3 has no PyYAML on a fresh Ubuntu host (only
+# CI runners happen to ship it), so a bare `python3` here breaks setup.
+if ! validation_error="$(uv run --frozen --project "$SCRIPT_DIR" python - "$OUT_TMP" "$name" 2>&1 <<'PY'
 import sys
 
 import yaml
