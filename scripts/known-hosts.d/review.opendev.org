@@ -1,0 +1,21 @@
+# OpenDev Gerrit's published SSH host keys (the endpoint `git review -s`
+# connects to: review.opendev.org port 29418, bracketed known_hosts marker).
+#
+# Source: "Gerrit SSH Host Keys" in the OpenDev Developer's Guide:
+#   https://docs.opendev.org/opendev/infra-manual/latest/developers.html
+#     [review.opendev.org]:29418 (ECDSA)    SHA256:/aPoKpg+804wdezs21L9djZ4bOsLudpGF7m7779XVuQ
+#     [review.opendev.org]:29418 (RSA)      SHA256:RXNl/GKyDaKiIQ93BoDvrNSKUPFvA1PNeAO9QiirYZU
+#     [review.opendev.org]:29418 (ED25519)  SHA256:lHsyuBxtcAiZeJM+viHllq52he9JNPqg8FFKv5+/BJ8
+# Vendored 2026-11-13 by scanning review.opendev.org:29418 and verifying
+# each key's SHA256 fingerprint against the source above.
+#
+# NOTE: port 22 on the same machine presents the host's own OpenSSH keys,
+# which legitimately differ - git-review never uses them, so they are not
+# pinned here.
+#
+# If ssh-keyscan output stops matching this file, do NOT blind-update: verify
+# the new fingerprints out-of-band against the source above first (MITM
+# guard, see scripts/pin-host-keys.sh).
+[review.opendev.org]:29418 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIncSZ8k+c0YJTO6Wux/Kpu2jnktFkepoU3jBkbIzXve
+[review.opendev.org]:29418 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBD70+y/Y7dJQBNboK6k+hq0DEGgFRzW0GRRVneYZHZ0fJMTeEDU04HziYky8fhV4eJWeqQmh3pbdPJHoqDWIGEA=
+[review.opendev.org]:29418 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCfsIj/jqpI+2CFdjCL6kOiqdORWvxQ2sQbCzSzzmLXic8yVhCCbwarkvEpfUOHG4eyB0vqVZfMffxf0Yy3qjURrsroBCiuJ8GdiAcGdfYwHNfBI0cR6kydBZL537YDasIk0Z3ILzhwf7474LmkVzS7V2tMTb4ZiBS/jUeiHsVp88FZhIBkyhlb/awAGcUxT5U4QBXCAmerYXeB47FPuz9JFOVyF08LzH9JRe9tfXtqaCNhlSdRe/2pPRvn2EIhn5uHWwATACG9MBdrK8xv8LqPOik2w1JkgLWyBj11vDd5I3IjrmREGw8dqImqp0r6MD8rxqADlc1elfDIXYsy+TVH

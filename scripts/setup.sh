@@ -163,6 +163,12 @@ case "$status" in
 esac
 wait_ready
 
+# The gh-cli secret plug is a manual connection and the instance did not
+# exist when step 5 ran, so wire it now. secret-setup.sh is idempotent: the
+# keyring steps report already-done and only the connect is new.
+echo "Wiring the gh-cli secret plug (idempotent re-run of the secrets step)."
+bash scripts/secret-setup.sh "$name"
+
 echo ""
 echo "════════════════════════════════════════════════════"
 echo "Setup complete - workshop '$name' is ready."
