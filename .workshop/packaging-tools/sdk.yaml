@@ -1,0 +1,11 @@
+# In-project SDK for the packaging profile (drafts D-3, D-7), referenced from
+# the rendered workshop definition as `project-packaging-tools`.
+#
+# Gap-fills the orange-dev-tools SDK with the Ubuntu packaging tools its apt
+# list omits (git-buildpackage, quilt, autopkgtest, sbuild-launchpad-chroot -
+# hooks/setup-base) and seeds a dput-ng PPA upload profile
+# (hooks/setup-project). Everything orange-dev-tools already provides
+# (sbuild, dput-ng, mini-dinstall, squid, the ~/.sbuildrc config) is consumed
+# as-is, never re-provisioned.
+name: packaging-tools
+base: ubuntu@26.04

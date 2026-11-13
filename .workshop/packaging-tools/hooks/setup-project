@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# setup-project - packaging-tools SDK (runs as the workshop user, post-mount,
+# cwd /project).
+#
+# 1. Seed ~/.dput.d/profiles/ppa.json: a dput-ng PPA upload profile pointing
+#    at ppa.launchpad.net, pre-seeded with the user's Launchpad username from
+#    the merged vars doc (.config.launchpad_username), so
+#    `dput ppa:<ppa-name> <changes>` targets ~<user>/<ppa-name> without
+#    repeating it. The profile is plain configuration - no secrets - and
+#    signing of source uploads stays a host-side responsibility (A-14).
+#    orange-dev-tools ships only the local-repo profile
+#    (~/.dput.d/profiles/local.json), so this file is never a duplicate.
+# 2. Shared provisioning via /project/scripts/hooks/lib-common.sh (todo 10):
+#    Atlassian MCP seed, agentic skills, forge host-key pinning, git identity.
+
+set -euo pipefail
+
+# Locate this instance's merged vars doc (persisted by scripts/setup.sh and
+# visible here through the /project mount). The workshop container's hostname
+# is the workshop name; fall back to the sole vars doc of this profile when
+# the hostname lookup misses.
+find_vars_doc() {
+    local by_host
+    local doc
+    local -a matches=()
+    by_host="/project/.state/$(hostname).vars.json"
+    if [ -f "$by_host" ]; then
+        printf '%s\n' "$by_host"
+        return 0
+    fi
+    for doc in /project/.state/*.vars.json; do
+        [ -f "$doc" ] || continue
+        if [ "$(jq -r '.profile // empty' "$doc")" = "packaging" ]; then
+            matches+=("$doc")
+        fi
+    done
+    if [ "${#matches[@]}" -eq 1 ]; then
+        printf '%s\n' "${matches[0]}"
+        return 0
+    fi
+    echo "ERROR: no merged vars doc for this instance under /project/.state/;" >&2
+    echo "       run 'just setup <name>' on the host first." >&2
+    return 1
+}
+
+# write_ppa_profile <vars-doc> - seed ~/.dput.d/profiles/ppa.json. The shape
+# mirrors dput-ng's stock ppa profile (/usr/share/dput-ng/profiles/ppa.json)
+# with the Launchpad username pre-seeded into the incoming path.
+write_ppa_profile() {
+    local vars_doc="$1"
+    local lp_user profile_dir
+    lp_user="$(jq -r '.config.launchpad_username // empty' "$vars_doc")"
+    if [ -z "$lp_user" ]; then
+        echo "WARNING: config.launchpad_username is not set; skipping the" >&2
+        echo "         dput-ng PPA profile. Add it to config/local.json and" >&2
+        echo "         re-run 'just setup <name>' to enable 'dput ppa:<ppa-name>'." >&2
+        return 0
+    fi
+    profile_dir="$HOME/.dput.d/profiles"
+    mkdir -p "$profile_dir"
+    jq -n --arg user "$lp_user" '{
+        fqdn: "ppa.launchpad.net",
+        incoming: "~\($user)/%(ppa)s",
+        login: "anonymous",
+        meta: "ubuntu",
+        method: "ftp",
+        "required-fields": {skip: true},
+        "supported-distribution": {
+            allowed: ["release"],
+            known: ["release", "proposed", "updates", "backports", "security"]
+        }
+    }' > "$profile_dir/ppa.json.tmp"
+    mv "$profile_dir/ppa.json.tmp" "$profile_dir/ppa.json"
+    echo "✓ Wrote $profile_dir/ppa.json (dput ppa:<ppa-name> uploads to ~$lp_user/<ppa-name> on ppa.launchpad.net)"
+}
+
+vars_doc="$(find_vars_doc)"
+write_ppa_profile "$vars_doc"
+
+# shellcheck disable=SC1091
+. /project/scripts/hooks/lib-common.sh
+seed_atlassian_mcp
+install_agentic_skills
+pin_forge_host_keys
+apply_git_identity "$vars_doc"
