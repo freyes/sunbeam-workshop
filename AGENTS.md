@@ -95,8 +95,9 @@ skills/                opencode-format skills for agents working IN THIS REPO
                        triggers on docs/** and its own path; pa11y stays
                        local-only per the stack's design - see docs/README.md).
 .state/                Runtime state (mode 0700, gitignored): merged vars docs
-                       (<name>.vars.json, 0600) and sidecar-VM ssh/trust
-                       material. Written by setup/vm scripts only.
+                       (<name>.vars.json, 0600), sidecar-VM ssh/trust
+                       material, and repos-<name>.json. Written by setup/vm
+                       scripts and the repo manager (repos.py).
 .openchamber-password  openchamber UI password file (gitignored).
 ```
 
