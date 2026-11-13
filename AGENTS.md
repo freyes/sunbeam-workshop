@@ -84,9 +84,10 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   tests/                 Shell suites (discovered live by run.sh) + pytest.
   sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
                          config layer merge (config.py), repo manager (repos.py).
-docs/                  dev-vm.md (sidecar VM) today; the sphinx-stack docs site
-                       (tutorial, how-tos, explanation, reference) lands here
-                       per D-16/D-17.
+docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
+                       four Diataxis quadrants (tutorial/, how-to/, explanation/,
+                       reference/) plus dev-vm.md (sidecar VM). Build and check
+                       only - never published.
 skills/                opencode-format skills for agents working IN THIS REPO
                        (see Core Engineering Practices).
 .github/workflows/     lint.yaml and test.yaml (SHA-pinned actions).
@@ -138,7 +139,7 @@ side, and the dangerous ones only work where they must.
 | `just vm-status` / `just vm-shell` | Sidecar VM state (read-only) / ssh shell | - |
 | `just lint` | Local twin of the CI lint workflow: shellcheck, hook gate, just-recipe gate, actionlint, config/template validation | - |
 | `just test` | Every shell test suite (`scripts/tests/run.sh`; suites discovered live). The pytest unit tests are the separate `python-tests` CI job; locally: `cd scripts && uv run --frozen pytest -q` | - |
-| `just docs-build` / `just docs-serve` / `just docs-check` | sphinx-stack docs targets; active once the docs site lands under `docs/` (D-16/D-17) | - |
+| `just docs-build` / `just docs-serve` / `just docs-check` | sphinx-stack docs targets: strict build, local serve, full check battery (D-16/D-17) | - |
 
 ### What you may and may not mutate
 
@@ -317,6 +318,6 @@ activity.
 | `just vm-status` | Report the sidecar VM state (read-only) |
 | `just lint` | Local twin of the CI lint workflow |
 | `just test` | Run every shell test suite under `scripts/tests/` |
-| `just docs-build` | Build the docs site (strict; active once the sphinx-stack lands) |
+| `just docs-build` | Build the docs site (strict: warnings are errors) |
 | `just docs-serve` | Build and serve the docs site locally |
 | `just docs-check` | Full docs check battery (build, spelling, links, style) |
