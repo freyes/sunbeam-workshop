@@ -1,0 +1,99 @@
+#cloud-config
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# Provisioning for the sunbeam sidecar dev VM (draft D-11). Rendered by
+# scripts/jinja2 from the merged vars doc (`python -m sunbeam_workshop vars
+# sunbeam`) with `vm_pubkey` injected by scripts/vm/create.sh. Snap channels
+# come from profiles/sunbeam/vars.json (profile_vars) - bump them there, never
+# here, and re-run `just vm-create` (or destroy + create) to pick them up.
+#
+# The VM is the sunbeam build/test substrate: craft builds run destructive-mode
+# on the 26.04 guest (nested LXD in the workshop container is blocked upstream:
+# canonical/workshop#769, canonical/lxd#14770), microk8s + juju provide the
+# func/deployment testing substrate, and the guest's own LXD is driven from the
+# workshop container as an lxc remote.
+
+users:
+  - name: dev
+    gecos: OpenStack dev
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    groups: [sudo]
+{%- if vm_pubkey is defined and vm_pubkey %}
+    ssh_authorized_keys:
+      - {{ vm_pubkey }}
+{%- else %}
+    ssh_authorized_keys: []
+{%- endif %}
+
+package_update: true
+package_upgrade: false
+
+packages:
+  - git
+  - jq
+  - make
+  - curl
+
+# Snap installs go through cloud-init's snap module so a failed install fails
+# the snap module (and with it `cloud-init status`). The craft toolchain is
+# classic-confined; the microk8s classic track needs --classic; juju is
+# strictly confined. Channels render from profile_vars (see header).
+snap:
+  commands:
+{%- for tool in ["snapcraft", "rockcraft", "charmcraft"] %}
+    - snap install --classic --channel={{ profile_vars.snaps[tool].channel }} {{ tool }}
+{%- endfor %}
+    - snap install --classic --channel={{ profile_vars.k8s.channel }} {{ profile_vars.k8s.snap }}
+    - snap install --channel={{ profile_vars.snaps.juju.channel }} juju
+
+# ONE script under `set -euo pipefail`, not a list of independent commands:
+# cloud-init renders a plain `runcmd` list as /bin/sh with no error handling
+# and judges the module by the LAST command's status, so intermediate failures
+# would be invisible. The completion marker written at the end is what
+# create.sh (wait) and status.sh actually gate on.
+runcmd:
+  - - bash
+    - -euo
+    - pipefail
+    - -c
+    - |
+      # Clear the completion marker first so it always reflects THIS run.
+      rm -f /var/lib/sunbeam-provisioned
+
+      # snap confinement needs the home directory traversable.
+      chmod o+x /home/dev
+
+      # /usr/sbin/lxc from lxd-installer is a stub that would shadow the real client.
+      apt-get remove -y lxd-installer || true
+
+      # LXD inside the VM: the workshop container drives it as an lxc remote
+      # (lxc client only - the container never nests a daemon of its own).
+      if snap list lxd >/dev/null 2>&1; then
+        snap refresh lxd --channel=6/stable || true
+      else
+        snap install --channel=6/stable lxd
+      fi
+      lxd waitready --timeout=60
+      # Idempotent: `lxd init --auto` errors on an already-initialised daemon.
+      lxc storage list --format csv | grep -q . || lxd init --auto
+      usermod -aG lxd dev
+      usermod -aG microk8s dev
+
+      # Nested instances (launched via the lxc remote) need working DNS. This
+      # guest runs systemd-resolved, so /etc/resolv.conf points at the
+      # 127.0.0.53 stub; LXD dnsmasq copies its forwarders from that file and
+      # 127.0.0.53 is the guest's own loopback - unreachable from an instance.
+      # Repoint to the REAL upstream list (the supported resolved mode for
+      # exactly this case); bridges created later read it when they start.
+      ln -sf ../run/systemd/resolve/resolv.conf /etc/resolv.conf
+
+      # Bring microk8s up now so the VM is bootstrap-ready on first login.
+      microk8s status --wait-ready --timeout=300
+
+      # Completion marker: the ONLY reliable signal that every step above
+      # succeeded. Deliberately NOT under /run (a tmpfs): `runcmd` is
+      # per-instance, not per-boot, so a tmpfs marker would vanish on the
+      # first plain reboot and make a healthy VM look unprovisioned.
+      touch /var/lib/sunbeam-provisioned

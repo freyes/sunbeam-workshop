@@ -12,3 +12,7 @@ vm-destroy: assert-host
 # Open an ssh shell on the sidecar dev VM
 vm-shell:
     exec bash scripts/vm/shell.sh
+
+# Report the sidecar dev VM state (read-only)
+vm-status:
+    exec bash scripts/vm/status.sh
