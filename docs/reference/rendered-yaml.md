@@ -1,4 +1,5 @@
 (rendered-yaml)=
+
 # The rendered workshop definition
 
 `.workshop/<name>.yaml` is the contract between this repository and the

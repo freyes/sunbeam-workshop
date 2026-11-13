@@ -90,7 +90,10 @@ docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
                        only - never published.
 skills/                opencode-format skills for agents working IN THIS REPO
                        (see Core Engineering Practices).
-.github/workflows/     lint.yaml and test.yaml (SHA-pinned actions).
+.github/workflows/     lint.yaml, test.yaml, and docs.yaml (SHA-pinned actions;
+                       docs.yaml runs the sphinx-stack docs check battery and
+                       triggers on docs/** and its own path; pa11y stays
+                       local-only per the stack's design - see docs/README.md).
 .state/                Runtime state (mode 0700, gitignored): merged vars docs
                        (<name>.vars.json, 0600) and sidecar-VM ssh/trust
                        material. Written by setup/vm scripts only.

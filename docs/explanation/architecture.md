@@ -1,4 +1,5 @@
 (architecture)=
+
 # Architecture
 
 sunbeam-workshop turns one Ubuntu host into any number of named, isolated
@@ -47,7 +48,7 @@ live under `/project/git`.
 
 **The sidecar VM** (sunbeam profile only) is an optional LXD virtual machine
 on the host for the work the container cannot do: craft builds - nested LXD
-inside the container is blocked upstream - and a microk8s + juju substrate
+inside the container is blocked upstream - and a MicroK8s + Juju substrate
 for deployment testing. Its hardware preset lives in `config/vm.json`;
 `docs/dev-vm.md` covers its lifecycle (`just vm-create`, `vm-shell`,
 `vm-status`, `vm-destroy`).

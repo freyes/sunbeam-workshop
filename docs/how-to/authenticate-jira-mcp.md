@@ -1,4 +1,5 @@
 (authenticate-jira-mcp)=
+
 # Authenticate the Jira MCP server
 
 Every profile seeds the Atlassian (Jira) MCP server into the opencode

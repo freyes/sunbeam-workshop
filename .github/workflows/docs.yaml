@@ -1,0 +1,47 @@
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# Docs quality gate (drafts D-17, IS-11; plan todo 19): the sphinx-stack
+# check battery over docs/. Local twin: `just docs-check` runs the same
+# stack Makefile targets in the same order. Every step below calls the
+# stack's own Makefile target - no custom commands. pa11y (WCAG 2.2 AA) is
+# local-only by stack design and deliberately NOT run here (docs/README.md).
+name: docs
+
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yaml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  docs-checks:
+    name: docs-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: '3.12'
+      - name: Bootstrap the docs venv (stack Makefile)
+        run: make -C docs install
+      - name: Build docs (strict, warnings are errors)
+        run: make -C docs html SPHINXOPTS="-W"
+      - name: Spelling check
+        run: make -C docs spelling
+      - name: Link check
+        run: make -C docs linkcheck
+      - name: Inclusive language check
+        run: make -C docs woke
+      - name: Style guide lint
+        run: make -C docs vale
+      - name: Markdown lint
+        run: make -C docs lint-md

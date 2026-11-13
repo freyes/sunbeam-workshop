@@ -198,6 +198,8 @@ exclude_patterns = [
     "doc-cheat-sheet*",
     ".venv*",
     "_dev",
+    # Repo-facing readme, not a site page (kept out of the toctree on purpose)
+    "README.md",
 ]
 
 # Adds custom CSS files, located remotely or in 'html_static_path'.

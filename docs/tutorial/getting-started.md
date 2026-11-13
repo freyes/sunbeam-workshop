@@ -1,4 +1,5 @@
 (getting-started)=
+
 # Get started with sunbeam-workshop
 
 This tutorial takes you from a fresh Ubuntu host to a running OpenStack
@@ -10,7 +11,7 @@ it, and reach the openchamber web UI.
 
 ### A suitable host
 
-- An **amd64 Ubuntu 24.04 or later** machine. Other architectures are
+- An **amd64 Ubuntu 24.04 LTS or later** machine. Other architectures are
   untested; arm64 is best-effort only.
 - Room for the `sunbeam` profile's optional sidecar VM: about **8 CPU cores,
   16 GiB of RAM, and 100 GiB of free disk** (the preset lives in

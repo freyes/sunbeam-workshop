@@ -1,4 +1,5 @@
 (profiles)=
+
 # Profiles
 
 Profiles are data: a jinja2 template plus a variables document per profile
@@ -6,7 +7,7 @@ under `profiles/<profile>/`. Three profiles ship with the repository.
 
 | Profile | Purpose | Highlights |
 | --- | --- | --- |
-| `sunbeam` | Sunbeam / OpenStack-on-k8s development | charmcraft, snapcraft, rockcraft, juju, go, astral-uv (pinned channels); tox + tox-uv; uv-managed CPython 3.10 and 3.12; optional sidecar VM (microk8s `1.32-classic/stable`) |
+| `sunbeam` | Sunbeam / OpenStack-on-k8s development | `charmcraft`, `snapcraft`, `rockcraft`, `juju`, `go`, `astral-uv` (pinned channels); tox + tox-uv; uv-managed CPython 3.10 and 3.12; optional sidecar VM (`microk8s` `1.32-classic/stable`) |
 | `charmed` | Classic charmed OpenStack development | charmcraft; tox + tox-uv; uv-managed CPython 3.10 and 3.12; git-review for Gerrit submissions |
 | `packaging` | Ubuntu packaging for OpenStack | `orange-dev-tools` SDK (`latest/edge`) plus git-buildpackage, quilt, and sbuild tooling (`sbuild-launchpad-chroot`) from the hooks |
 
@@ -21,10 +22,10 @@ capped at 40 characters.
 | --- | --- | --- |
 | `core_repos` | seed | Repositories the profile works on. Seeds `config/repos/<profile>.json`, the live list `just repos` consumes. Entry shape: `{name, forge, url}` - see {doc}`config`. |
 | `supporting_repos` | seed | Same shape as `core_repos`, for secondary checkouts. |
-| `snaps` | `setup-base` hook | Snap pins installed at launch: channel and confinement per snap. Sunbeam pins charmcraft, snapcraft, rockcraft (`latest/stable`, classic), juju (`3.6/stable`), go (`1.27/stable`), and astral-uv (`latest/stable`, classic); charmed pins charmcraft. |
+| `snaps` | `setup-base` hook | Snap pins installed at launch: channel and confinement per snap. Sunbeam pins `charmcraft`, `snapcraft`, `rockcraft` (`latest/stable`, classic), `juju` (`3.6/stable`), `go` (`1.27/stable`), and `astral-uv` (`latest/stable`, classic); charmed pins `charmcraft`. |
 | `tox` | `setup-project` hook | tox version (`4.47.3`) and plugins (`tox-uv`) for the hash-locked tox virtual environment. |
 | `pythons` | `setup-project` hook | Interpreters installed via `uv python install` (`3.10`, `3.12`) for the tox environments; discovered through tox-uv. |
-| `k8s` | sidecar VM cloud-init | Sunbeam only: the microk8s snap and channel (`1.32-classic/stable`) for the deployment-testing substrate in the sidecar VM. |
+| `k8s` | sidecar VM cloud-init | Sunbeam only: the `microk8s` snap and channel (`1.32-classic/stable`) for the deployment-testing substrate in the sidecar VM. |
 | `extra_sdks` | `sdks-chain` partial | Extra store SDKs inserted between `uv` and the in-project tools SDK. Packaging uses it for `orange-dev-tools` (`latest/edge`). |
 
 ## Template composition

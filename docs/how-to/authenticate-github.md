@@ -1,4 +1,5 @@
 (authenticate-github)=
+
 # Authenticate with GitHub
 
 This guide wires your GitHub credentials into a workshop instance so `gh`
