@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# setup-base - packaging-tools SDK (runs as root, pre-mount). SELF-CONTAINED:
+# it sources nothing (scripts/hooks/lib-common.sh targets the post-mount
+# workshop user; scripts/render.sh is host tooling).
+#
+# Gap-fill on top of the orange-dev-tools SDK (draft D-7). orange's apt list
+# per freyes/sdk-orange-dev-tools README + sdkcraft.yaml: sbuild, debhelper,
+# devscripts, ubuntu-dev-tools, dpkg-dev, build-essential, mmdebstrap,
+# dput-ng, mini-dinstall, distro-info, schroot, debootstrap, uidmap, squid,
+# byobu, dh-python. It omits the four Ubuntu packaging tools below, which the
+# Ubuntu dev-setup guide installs; this hook adds exactly those. Nothing here
+# duplicates orange's own provisions (sbuild, dput-ng, mini-dinstall, squid).
+#
+# Deliberate scope cuts:
+#   * No snapd-dependent tooling (A-4): the profile keeps the default
+#     lxd-container runtime, so the snap orange's README marks best-effort
+#     stays out of scope.
+#   * No OpenPGP material or signing-agent forwarding (A-14).
+#
+# Ordering: orange-dev-tools is listed before project-packaging-tools in the
+# workshop definition, so its apt proxy config (squid at 127.0.0.1:3128) is
+# already active for the transaction below.
+#
+# git arrives as a hard dependency of git-buildpackage (gbp is a git tool) and
+# serves install_agentic_skills in setup-project. jq is installed explicitly:
+# scripts/hooks/lib-common.sh (sourced by setup-project) needs it for the MCP
+# seed and git identity, and no SDK in the chain guarantees it.
+
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+pkgs=(
+    git-buildpackage
+    quilt
+    autopkgtest
+    sbuild-launchpad-chroot
+    jq
+)
+
+apt-get update
+apt-get install -y --no-install-recommends "${pkgs[@]}"

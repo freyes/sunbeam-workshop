@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# check-health - packaging-tools SDK (runs as root). Reports through
+# workshopctl set-health; any gate failure sets an error health with a stable
+# --code and exits 1.
+#
+# Gates:
+#   * sbuild, dput on PATH            (orange-dev-tools' apt list)
+#   * gbp, quilt, autopkgtest on PATH (this SDK's setup-base gap-fill)
+#   * ~/.sbuildrc exists              (written by orange-dev-tools'
+#                                      setup-project; gated, never written,
+#                                      by this SDK)
+
+set -euo pipefail
+
+fail() {
+    local code="$1" message="$2"
+    workshopctl set-health --code="$code" error "$message"
+    exit 1
+}
+
+for tool in sbuild dput gbp quilt autopkgtest; do
+    command -v "$tool" >/dev/null 2>&1 \
+        || fail "missing-$tool" "$tool is not on PATH"
+done
+
+workshop_user="$(getent passwd 1000 | cut -d: -f1)"
+[ -n "$workshop_user" ] \
+    || fail "missing-workshop-user" "unable to resolve workshop user for uid 1000"
+user_home="$(getent passwd 1000 | cut -d: -f6)"
+
+[ -f "$user_home/.sbuildrc" ] \
+    || fail "missing-sbuildrc" \
+        "$user_home/.sbuildrc does not exist; orange-dev-tools setup-project did not complete"
+
+workshopctl set-health okay
