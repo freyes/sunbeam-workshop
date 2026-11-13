@@ -1,0 +1,8 @@
+# shellcheck disable=all
+# Top-level pins for the container's tox install (draft D-5: tox==4.47.3,
+# matching sunbeam CI); tox-uv makes tox build its environments with uv.
+# Regenerate tox-requirements.txt after editing (see its header), then
+# restore its first line `# shellcheck disable=all` - the hooks/* shellcheck
+# glob covers every file in this directory, including the generated one.
+tox==4.47.3
+tox-uv==1.33.4

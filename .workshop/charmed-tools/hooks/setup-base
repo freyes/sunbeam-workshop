@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# setup-base - charmed-tools SDK system-level preparation. Runs as root,
+# pre-mount (/project is NOT mounted yet): this hook is fully self-contained
+# and must not source or reference anything under /project.
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+# Baseline apt set shared by the in-project profile SDKs, plus git-review
+# for the Gerrit review workflow (draft D-6, IS-5).
+pkgs=(
+  ca-certificates
+  curl
+  git
+  git-review
+  gnupg
+  jq
+  python3
+  python3-yaml
+  rsync
+  shellcheck
+  wget
+)
+
+apt-get update
+apt-get install -y --no-install-recommends "${pkgs[@]}"
+
+# Craft toolchain for classic charms (draft D-4): charmcraft only. Func
+# testing is out of IS-5's scope for this profile - do not pin func-test
+# tooling here.
+snap install --classic --channel=latest/stable charmcraft

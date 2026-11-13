@@ -1,0 +1,40 @@
+{
+  "core_repos": [
+    {
+      "name": "charm-keystone",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-keystone",
+      "gerrit": "review.opendev.org"
+    },
+    {
+      "name": "charm-nova-compute",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-nova-compute",
+      "gerrit": "review.opendev.org"
+    },
+    {
+      "name": "charm-neutron-openvswitch",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-openvswitch",
+      "gerrit": "review.opendev.org"
+    },
+    {
+      "name": "charm-cinder",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder",
+      "gerrit": "review.opendev.org"
+    },
+    {
+      "name": "charm-glance",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-glance",
+      "gerrit": "review.opendev.org"
+    }
+  ],
+  "supporting_repos": [],
+  "snaps": [
+    {"name": "charmcraft", "channel": "latest/stable", "classic": true}
+  ],
+  "pythons": ["3.10", "3.12"],
+  "tox": {"version": "4.47.3", "plugins": ["tox-uv"]}
+}

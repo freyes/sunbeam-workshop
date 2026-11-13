@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# check-health - charmed-tools SDK health gate. Runs as root; reports through
+# workshopctl set-health (see the runtime-hooks contract).
+set -euo pipefail
+
+workshop_user="$(getent passwd 1000 | cut -d: -f1)"
+if [ -z "$workshop_user" ]; then
+    workshopctl set-health --code=missing-workshop-user error \
+        "unable to resolve workshop user for uid 1000"
+    exit 1
+fi
+
+# System tooling from setup-base: charmcraft (snap) and git-review (apt).
+for tool in charmcraft git-review; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+        workshopctl set-health --code=missing-system-tooling error \
+            "$tool is not on PATH"
+        exit 1
+    fi
+done
+
+# tox is installed per-user by setup-project (uv venv, symlinked into
+# ~/.local/bin), so probe it as the workshop user in a login shell.
+if ! sudo -u "$workshop_user" bash -lc "command -v tox" >/dev/null 2>&1; then
+    workshopctl set-health --code=missing-python-tooling error \
+        "tox is not installed for $workshop_user"
+    exit 1
+fi
+
+# Gerrit identity (draft D-6): without gitreview.username, `git review -s`
+# cannot wire the gerrit remote.
+gerrit_username="$(sudo -u "$workshop_user" git config --global gitreview.username 2>/dev/null || true)"
+if [ -z "$gerrit_username" ]; then
+    workshopctl set-health --code=missing-gerrit-username error \
+        "gitreview.username is not set for $workshop_user (set gerrit_username in config)"
+    exit 1
+fi
+
+# The openstack-agentic-skills symlink seeded by setup-project must resolve.
+skills_link="/home/$workshop_user/.config/opencode/skills/openstack-agentic-skills"
+if ! sudo -u "$workshop_user" test -e "$skills_link"; then
+    workshopctl set-health --code=missing-agentic-skills error \
+        "$skills_link does not resolve"
+    exit 1
+fi
+
+workshopctl set-health okay

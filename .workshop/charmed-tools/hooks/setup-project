@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# setup-project - charmed-tools SDK per-project setup for the classic
+# charmed OpenStack profile. Runs as the workshop user, post-mount, with
+# /project as the working directory.
+set -euo pipefail
+
+# Shared hook library, tracked at scripts/hooks/lib-common.sh in the repo and
+# mounted at /project inside the container. Source it - never duplicate it.
+# The shellcheck source directive is repo-root-relative so `shellcheck -x`
+# from the repo root can follow it.
+# shellcheck source=scripts/hooks/lib-common.sh
+. /project/scripts/hooks/lib-common.sh
+
+# This hook's own directory, so the vendored requirements file is found both
+# when the SDK is staged under $SDK and when hooks run from /project.
+hook_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Classic charm tox conventions (draft D-18; charm-keystone tox.ini):
+# pep8/py3 envs use basepython 3.12, functional envs use 3.10.
+install_uv_pythons 3.10 3.12
+
+# tox==4.47.3 + tox-uv from the vendored hash-locked requirements (draft D-5);
+# the venv is rebuilt only when the requirements file changes.
+build_tox_venv "$hook_dir/tox-requirements.txt" \
+    "$HOME/.local/share/sunbeam-workshop/tox-venv"
+
+# Gerrit identity (draft D-6). scripts/setup.sh persists the merged vars doc
+# at /project/.state/<name>.vars.json before launch; <name> is the workshop
+# instance name, which is the container hostname.
+vars_doc="/project/.state/$(hostname).vars.json"
+if [ ! -f "$vars_doc" ]; then
+    echo "ERROR: merged vars doc not found: $vars_doc" >&2
+    echo "       it is written by scripts/setup.sh (host) before launch." >&2
+    exit 1
+fi
+gerrit_username="$(jq -r '.config.gerrit_username // empty' "$vars_doc")"
+if [ -n "$gerrit_username" ]; then
+    git config --global gitreview.username "$gerrit_username"
+else
+    echo "WARNING: config.gerrit_username is unset in $vars_doc;" >&2
+    echo "         git review -s needs gitreview.username (check-health gates on it)." >&2
+fi
+
+seed_atlassian_mcp
+install_agentic_skills
+pin_forge_host_keys
+apply_git_identity "$vars_doc"
