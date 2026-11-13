@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 # Sidecar dev VM
 
 The optional sunbeam sidecar VM (draft D-11): an LXD VM on the **host** that runs the
