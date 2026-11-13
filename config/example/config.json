@@ -1,0 +1,7 @@
+{
+  "github_handle": "your-github-handle",
+  "email": "your.name@canonical.com",
+  "forks": {},
+  "core_repos": ["charm-keystone", "snap-openstack", "sunbeam-charms"],
+  "supporting_repos": ["openstack-agentic-skills"]
+}

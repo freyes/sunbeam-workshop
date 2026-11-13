@@ -1,0 +1,18 @@
+# Rendered workshop instances (tracked sources: .workshop/*/sdk.yaml, hooks)
+.workshop/*.yaml
+
+# Runtime state and credentials
+.state/
+.openchamber-password
+
+# Per-user configuration
+config/local.json
+config/*/config.json
+
+# Local tooling and build artifacts
+scripts/.venv/
+__pycache__/
+docs/_build/
+
+# Execution evidence
+.omo/evidence/
