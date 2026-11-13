@@ -3,4 +3,9 @@
 
 A hands-on introduction to sunbeam-workshop for new developers.
 
-Content lands in a later wave.
+```{toctree}
+---
+maxdepth: 1
+---
+Get started <getting-started>
+```

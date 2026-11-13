@@ -3,4 +3,10 @@
 
 Step-by-step guides covering key operations and common tasks.
 
-Content lands in a later wave.
+```{toctree}
+---
+maxdepth: 1
+---
+authenticate-github
+authenticate-jira-mcp
+```
