@@ -67,7 +67,7 @@ class Resolution:
 
 def current_user() -> str:
     """Host user name, with any '@canonical.com' suffix stripped."""
-    return os.environ.get("USER", "nobody").replace("@canonical.com", "")
+    return os.environ.get("USER", "nobody").removesuffix("@canonical.com")
 
 
 def list_profiles(root: Path) -> list[str]:
@@ -75,7 +75,12 @@ def list_profiles(root: Path) -> list[str]:
     profiles_dir = root / "profiles"
     if not profiles_dir.is_dir():
         return []
-    return sorted(entry.name for entry in profiles_dir.iterdir() if entry.is_dir())
+    # _-prefixed dirs (_partials) are shared template partials, not profiles.
+    return sorted(
+        entry.name
+        for entry in profiles_dir.iterdir()
+        if entry.is_dir() and not entry.name.startswith("_")
+    )
 
 
 def validate_name(name: str) -> None:

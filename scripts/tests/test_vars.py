@@ -17,6 +17,8 @@ from sunbeam_workshop.vars import (
     InvalidNameError,
     UnknownProfileError,
     build_vars,
+    current_user,
+    list_profiles,
     resolve_name,
 )
 
@@ -108,6 +110,18 @@ def test_unknown_prefix_error_lists_profiles(root: Path) -> None:
         assert profile in message
 
 
+def test_underscore_dirs_are_not_profiles(root: Path) -> None:
+    # A profiles/_junk-style dir (shared partials) is never a valid profile.
+    (root / "profiles" / "_junk").mkdir()
+    assert list_profiles(root) == sorted(PROFILES)
+    with pytest.raises(UnknownProfileError) as excinfo:
+        resolve_name(root, "unknownprofile")
+    message = str(excinfo.value)
+    assert "_junk" not in message
+    for profile in PROFILES:
+        assert profile in message
+
+
 @pytest.mark.parametrize(
     "name",
     [
@@ -137,6 +151,19 @@ def test_shadow_warning(root: Path) -> None:
     assert doc["profile"] == "packaging-foo"
     assert doc["suffix"] == ""
     assert doc["shadow_warning"] is True
+
+
+# --- user identity -----------------------------------------------------------
+
+
+def test_current_user_strips_only_trailing_suffix(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("USER", "alice@canonical.com")
+    assert current_user() == "alice"
+    # A non-trailing '@canonical.com' is left untouched (docstring: suffix).
+    monkeypatch.setenv("USER", "alice@canonical.com.example.com")
+    assert current_user() == "alice@canonical.com.example.com"
 
 
 # --- merged vars doc -------------------------------------------------------
