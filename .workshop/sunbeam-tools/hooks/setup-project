@@ -62,6 +62,6 @@ workshop_name="$(hostname)"
 if vars_doc="$(find_vars_doc sunbeam)"; then
     run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
 else
-    echo "WARNING: /project/.state/${workshop_name}.vars.json not found; skipping git identity." >&2
+    echo "WARNING: no merged vars doc for this instance under /project/.state/; skipping git identity." >&2
     echo "  Persist it with 'just setup ${workshop_name}' on the host before a manual launch." >&2
 fi
