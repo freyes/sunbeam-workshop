@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import subprocess
 from pathlib import Path
 
@@ -364,6 +365,22 @@ def test_apply_reports_dirty_clone_and_leaves_it(
     assert git("-C", str(clone), "status", "--porcelain") != ""
     assert "local uncommitted edit" in (clone / "README.md").read_text()
     assert git("-C", str(clone), "rev-parse", "HEAD") != remote_head
+
+
+def test_apply_creates_state_dir_mode_0700(
+    root: Path, shims: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bare, _ = make_remote(root, "keystone")
+    write_repo_config(
+        root,
+        "packaging",
+        core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}],
+    )
+    assert main(["repos", "apply", "packaging"]) == 0
+    capsys.readouterr()
+    state_dir = root / ".state"
+    assert state_dir.is_dir()
+    assert stat.S_IMODE(state_dir.stat().st_mode) == 0o700
 
 
 def test_apply_unknown_forge_exits_nonzero(

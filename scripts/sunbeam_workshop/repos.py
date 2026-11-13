@@ -344,7 +344,7 @@ def apply_profile(root: Path, name: str, git_root: Path) -> tuple[dict[str, Any]
         "repos": results,
     }
     state_dir = root / ".state"
-    state_dir.mkdir(exist_ok=True)
+    state_dir.mkdir(mode=0o700, exist_ok=True)
     state_path = state_dir / f"repos-{name}.json"
     summary["state_file"] = str(state_path)
     state_path.write_text(

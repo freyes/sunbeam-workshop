@@ -148,6 +148,9 @@ bash scripts/secret-setup.sh "$name"
 banner 6 "Workshop container"
 echo "Launches the '$name' workshop container and waits for SDK health."
 status="$(workshop info "$name" 2>/dev/null | awk '/^[[:space:]]*status:/ {print $2}' || true)"
+# Tolerate a quoted status value the way wait_ready already does.
+status="${status#\"}"
+status="${status%\"}"
 case "$status" in
     [rR]eady)
         echo "✓ Workshop '$name' already active. Skipping launch."
@@ -169,6 +172,10 @@ wait_ready
 echo "Wiring the gh-cli secret plug (idempotent re-run of the secrets step)."
 bash scripts/secret-setup.sh "$name"
 
+# The repos hint names the resolved profile: first-dash truncation of the
+# instance name is wrong for dashed profile names, so resolve via the vars
+# module (longest-prefix).
+profile="$(cd scripts && uv run --frozen python -m sunbeam_workshop vars "$name" | jq -r .profile)"
 echo ""
 echo "════════════════════════════════════════════════════"
 echo "Setup complete - workshop '$name' is ready."
@@ -176,6 +183,6 @@ echo "════════════════════════�
 echo "  just shell $name      shell in the workshop container"
 echo "  just stop $name       stop the workshop container"
 echo "  just remove $name     remove the workshop container"
-echo "  just repos ${name%%-*}    clone/update its repositories"
+echo "  just repos $profile    clone/update its repositories"
 echo "  just                  list every available command"
 echo ""
