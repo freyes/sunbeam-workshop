@@ -1,0 +1,99 @@
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# Lint gate for the repo itself (drafts D-12, D-15; plan todo 14).
+# Local twin: `just lint` -> scripts/lint.sh runs the same checks, same order.
+# No job here needs LXD, snapd, or KVM, and nothing depends on secrets.
+name: lint
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: shellcheck scripts
+        run: shopt -s globstar && shellcheck -x scripts/**/*.sh scripts/vm/*.sh scripts/qa/host/*.sh scripts/tests/*.sh
+      # Hooks are linted through the gate's live discovery, which skips
+      # non-shell payload files (.workshop/*-tools/hooks/tox-requirements.*).
+      # Never glob .workshop/*/hooks/* into shellcheck directly (todo 21).
+      - name: shellcheck SDK hooks via the just-shell gate
+        run: bash scripts/check-just-shell.sh
+
+  just-gate:
+    name: just-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: shellcheck just recipe bodies
+        run: bash scripts/check-just-shell.sh Justfile just/*.just
+
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install actionlint (version- and checksum-pinned)
+        run: |
+          set -euo pipefail
+          version="1.7.12"
+          curl -sSfL -o /tmp/actionlint.tar.gz \
+              "https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz"
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  /tmp/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/actionlint.tar.gz -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" --version
+      - name: Run actionlint
+        run: |
+          "$RUNNER_TEMP/actionlint" .github/workflows/*.yaml
+
+  config-validate:
+    name: config-validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install jinja2
+        run: python3 -m pip install "jinja2==3.1.6"
+      - name: Validate config JSON files
+        run: |
+          set -euo pipefail
+          shopt -s globstar nullglob
+          for f in config/**/*.json; do
+              python3 -m json.tool "$f" > /dev/null
+          done
+          echo "json OK: config/**/*.json all parse"
+      - name: Parse jinja2 templates (syntax only; includes not resolved)
+        run: |
+          set -euo pipefail
+          python3 - <<'PYEOF'
+          import glob
+          import sys
+
+          import jinja2
+
+          # A bare Environment().parse() checks syntax only: {% include %}
+          # and {% set %} are parsed, never resolved or executed.
+          env = jinja2.Environment()
+          paths = sorted(glob.glob("profiles/**/*.j2", recursive=True))
+          bad = 0
+          for path in paths:
+              with open(path, encoding="utf-8") as fh:
+                  source = fh.read()
+              try:
+                  env.parse(source)
+              except jinja2.TemplateSyntaxError as exc:
+                  print(f"{path}:{exc.lineno}: {exc.message}", file=sys.stderr)
+                  bad += 1
+          print(f"jinja2 OK: parsed {len(paths)} templates, {bad} invalid")
+          if bad or not paths:
+              sys.exit(1)
+          PYEOF
