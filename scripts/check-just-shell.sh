@@ -1,14 +1,27 @@
 #!/usr/bin/env bash
 # Copyright 2026 Canonical Ltd. All rights reserved.
 #
-# Lint every shell recipe body in the Justfile and just/*.just.
-# Ported from ck8s-dev/scripts/check-just-shell.sh; the only intentional
-# divergences are the project name (the hook glob covers .workshop/*-tools
-# instead of ck8s-dev-tools), an optional file-list argument, and the
-# container re-exec: sunbeam-workshop has multiple named workshops, so there
-# is no unambiguous container to re-exec into and shellcheck is simply
-# required on PATH (preinstalled on GitHub ubuntu runners, in the workshop
-# containers, and one `sudo apt install -y shellcheck` away on a host).
+# Lint every shell recipe body in the Justfile and just/*.just, plus the SDK
+# hooks under .workshop/*-tools/hooks/.
+# Ported from ck8s-dev/scripts/check-just-shell.sh; intentional divergences:
+# the project name (the hook glob covers .workshop/*-tools instead of
+# ck8s-dev-tools), an optional file-list argument, the container re-exec
+# (sunbeam-workshop has multiple named workshops, so there is no unambiguous
+# container to re-exec into and shellcheck is simply required on PATH -
+# preinstalled on GitHub ubuntu runners, in the workshop containers, and one
+# `sudo apt install -y shellcheck` away on a host), hook discovery restricted
+# to shell files (below), and `shellcheck -x --source-path=<repo root>` on
+# hooks so their `# shellcheck source=scripts/hooks/lib-common.sh` directive
+# resolves.
+#
+# Hook restriction mechanism (the ONLY one - there is deliberately NO name
+# allowlist): hooks are discovered LIVE from the tree on every run, and a
+# .workshop/*-tools/hooks/ entry is linted iff it is a regular EXECUTABLE
+# file whose first line is a shell shebang shellcheck can parse (sh, bash,
+# dash, or ksh). Non-shell payload files sharing the hooks dir - the vendored
+# tox-requirements.in/.txt for the container's tox venv - are neither
+# executable nor shebang'd and are skipped; the bare glob used to feed them
+# to shellcheck and fail the gate. The recipe-body gate is unchanged.
 #
 # `just` recipe bodies are invisible to shellcheck: they live inside a Justfile,
 # indented, with {{...}} interpolations that are not shell. This extracts each
@@ -91,9 +104,13 @@ for script in "$work"/*.sh; do
     fi
 done
 
+shell_shebang='^#![[:space:]]*/?([^[:space:]]*/)*(env[[:space:]]+)?(ba|da|k)?sh([[:space:]].*)?$'
 for hook in "$project_dir"/.workshop/*-tools/hooks/*; do
     [ -f "$hook" ] || continue
-    if ! output="$(shellcheck -f gcc "$hook" 2>&1)" || [ -n "$output" ]; then
+    [ -x "$hook" ] || continue
+    IFS= read -r first_line < "$hook" || continue
+    [[ $first_line =~ $shell_shebang ]] || continue
+    if ! output="$(shellcheck -x --source-path="$project_dir" -f gcc "$hook" 2>&1)" || [ -n "$output" ]; then
         echo "== $hook"
         echo "$output"
         failed=1
