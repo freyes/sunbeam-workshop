@@ -1,0 +1,50 @@
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# CI test workflow: shell test suites, python unit tests, and the D-15
+# bounded render matrix. All logic lives in repo scripts - this workflow is
+# glue only and never duplicates render or validation logic.
+name: Test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  script-suites:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - name: Run all shell test suites
+        run: bash scripts/tests/run.sh
+
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - name: Run pytest
+        run: |
+          cd scripts
+          uv sync --frozen
+          uv run --frozen pytest -q
+
+  render-matrix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      - name: Render and validate the bounded matrix
+        run: bash scripts/ci/render-matrix.sh
