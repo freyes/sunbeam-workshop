@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# jinja2 wrapper: run the hash-locked jinja2 CLI (jinja2-cli==1.0.1) from the
+# uv project in this directory. Paths in "$@" stay relative to the CALLER's
+# cwd; --project only selects the environment. Never `uv tool install` (D-5).
+set -euo pipefail
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
+exec uv run --frozen --project "$SCRIPT_DIR" jinja2 "$@"
