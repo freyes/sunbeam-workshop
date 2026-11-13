@@ -17,32 +17,23 @@
 
 set -euo pipefail
 
-# Locate this instance's merged vars doc (persisted by scripts/setup.sh and
-# visible here through the /project mount). The workshop container's hostname
-# is the workshop name; fall back to the sole vars doc of this profile when
-# the hostname lookup misses.
-find_vars_doc() {
-    local by_host
-    local doc
-    local -a matches=()
-    by_host="/project/.state/$(hostname).vars.json"
-    if [ -f "$by_host" ]; then
-        printf '%s\n' "$by_host"
-        return 0
+# Shared hook library, tracked at scripts/hooks/lib-common.sh in the repo and
+# mounted at /project inside the container. Source it - never duplicate it.
+# The shellcheck source directive is repo-root-relative so `shellcheck -x`
+# from the repo root can follow it.
+# shellcheck source=scripts/hooks/lib-common.sh
+. /project/scripts/hooks/lib-common.sh
+
+# Provisioning failures are loud but do not abort the hook: check-health is
+# the authoritative gate and names the missing piece via workshopctl
+# set-health --code (ck8s-dev setup-project.base pattern - a swallowed
+# failure once left a "ready" workshop without its tooling).
+run_step() {
+    local label="$1"
+    shift
+    if ! "$@"; then
+        echo "ERROR: ${label} failed; check-health will report it" >&2
     fi
-    for doc in /project/.state/*.vars.json; do
-        [ -f "$doc" ] || continue
-        if [ "$(jq -r '.profile // empty' "$doc")" = "packaging" ]; then
-            matches+=("$doc")
-        fi
-    done
-    if [ "${#matches[@]}" -eq 1 ]; then
-        printf '%s\n' "${matches[0]}"
-        return 0
-    fi
-    echo "ERROR: no merged vars doc for this instance under /project/.state/;" >&2
-    echo "       run 'just setup <name>' on the host first." >&2
-    return 1
 }
 
 # write_ppa_profile <vars-doc> - seed ~/.dput.d/profiles/ppa.json. The shape
@@ -76,12 +67,29 @@ write_ppa_profile() {
     echo "✓ Wrote $profile_dir/ppa.json (dput ppa:<ppa-name> uploads to ~$lp_user/<ppa-name> on ppa.launchpad.net)"
 }
 
-vars_doc="$(find_vars_doc)"
-write_ppa_profile "$vars_doc"
+# Locate this instance's merged vars doc (persisted by scripts/setup.sh and
+# visible here through the /project mount). The hook environment does not
+# carry the workshop name, but the kernel hostname IS the bare workshop name
+# - upstream canonical/workshop templates /etc/hostname from
+# user.workshop.name; <WORKSHOP>.<PROJECT>.wp is only the DNS-level friendly
+# name - so find_vars_doc resolves the doc by hostname, with a
+# single-profile-match fallback. A missing vars doc is a warning that skips
+# the identity-dependent steps, never fatal (check-health gates).
+if ! vars_doc="$(find_vars_doc packaging)"; then
+    echo "WARNING: no merged vars doc for this instance under /project/.state/;" >&2
+    echo "         skipping the dput-ng PPA profile and git identity. Persist it" >&2
+    echo "         with 'just setup <name>' on the host before a manual launch." >&2
+    vars_doc=""
+fi
 
-# shellcheck disable=SC1091
-. /project/scripts/hooks/lib-common.sh
-seed_atlassian_mcp
-install_agentic_skills
-pin_forge_host_keys
-apply_git_identity "$vars_doc"
+if [ -n "$vars_doc" ]; then
+    run_step "write_ppa_profile $vars_doc" write_ppa_profile "$vars_doc"
+fi
+
+run_step "seed_atlassian_mcp" seed_atlassian_mcp
+run_step "install_agentic_skills" install_agentic_skills
+run_step "pin_forge_host_keys" pin_forge_host_keys
+
+if [ -n "$vars_doc" ]; then
+    run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
+fi

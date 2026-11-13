@@ -42,9 +42,11 @@ them.
 one per named instance. Each mounts this repository at `/project`, so the
 same checkout is the source of truth on both sides of the boundary: the
 host renders definitions from it, and the in-container hooks source their
-shared library from it. A running workshop gets the friendly hostname
-`<workshop>.<project>.wp`. Working clones of the profile's repositories
-live under `/project/git`.
+shared library from it. A running workshop's kernel hostname IS the bare
+workshop name - upstream canonical/workshop templates `/etc/hostname` from
+`user.workshop.name`; `<workshop>.<project>.wp` is only the DNS-level
+friendly name. Working clones of the profile's repositories live under
+`/project/git`.
 
 **The sidecar VM** (sunbeam profile only) is an optional LXD virtual machine
 on the host for the work the container cannot do: craft builds - nested LXD

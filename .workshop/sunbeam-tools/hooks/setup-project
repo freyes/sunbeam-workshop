@@ -52,16 +52,16 @@ run_step "pin_forge_host_keys" pin_forge_host_keys
 # Git identity from the merged vars doc persisted by `just setup` at
 # /project/.state/<name>.vars.json. The hook environment does not carry the
 # workshop name (the runtime-hook contract provides only $SDK, $HOME,
-# $XDG_RUNTIME_DIR and $DBUS_SESSION_BUS_ADDRESS), but every running workshop
-# gets the friendly hostname <WORKSHOP>.<PROJECT>.wp, so the instance name is
-# the first hostname label.
+# $XDG_RUNTIME_DIR and $DBUS_SESSION_BUS_ADDRESS), but the kernel hostname IS
+# the bare workshop name - upstream canonical/workshop templates
+# /etc/hostname from user.workshop.name; <WORKSHOP>.<PROJECT>.wp is only the
+# DNS-level friendly name - so find_vars_doc resolves the doc by hostname,
+# with a single-profile-match fallback. A missing vars doc is a warning,
+# never fatal: check-health is the authoritative gate.
 workshop_name="$(hostname)"
-workshop_name="${workshop_name%.wp}"
-workshop_name="${workshop_name%%.*}"
-vars_doc="/project/.state/${workshop_name}.vars.json"
-if [ -f "$vars_doc" ]; then
+if vars_doc="$(find_vars_doc sunbeam)"; then
     run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
 else
-    echo "WARNING: $vars_doc not found; skipping git identity." >&2
+    echo "WARNING: /project/.state/${workshop_name}.vars.json not found; skipping git identity." >&2
     echo "  Persist it with 'just setup ${workshop_name}' on the host before a manual launch." >&2
 fi

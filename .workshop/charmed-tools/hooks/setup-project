@@ -17,33 +17,59 @@ set -euo pipefail
 # when the SDK is staged under $SDK and when hooks run from /project.
 hook_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Provisioning failures are loud but do not abort the hook: check-health is
+# the authoritative gate and names the missing piece via workshopctl
+# set-health --code (ck8s-dev setup-project.base pattern - a swallowed
+# failure once left a "ready" workshop without its Python test tooling).
+run_step() {
+    local label="$1"
+    shift
+    if ! "$@"; then
+        echo "ERROR: ${label} failed; check-health will report it" >&2
+    fi
+}
+
+# Gerrit + git identity come from the merged vars doc persisted by
+# scripts/setup.sh at /project/.state/<name>.vars.json before launch. The
+# hook environment does not carry the workshop name, but the kernel hostname
+# IS the bare workshop name - upstream canonical/workshop templates
+# /etc/hostname from user.workshop.name; <WORKSHOP>.<PROJECT>.wp is only the
+# DNS-level friendly name - so find_vars_doc resolves the doc by hostname,
+# with a single-profile-match fallback. A missing vars doc is a warning that
+# skips the identity-dependent steps below, never fatal (check-health gates).
+if ! vars_doc="$(find_vars_doc charmed)"; then
+    echo "WARNING: no merged vars doc for this instance under /project/.state/;" >&2
+    echo "         skipping the gerrit + git identity steps. Persist it with" >&2
+    echo "         'just setup <name>' on the host before a manual launch." >&2
+    vars_doc=""
+fi
+
 # Classic charm tox conventions (draft D-18; charm-keystone tox.ini):
 # pep8/py3 envs use basepython 3.12, functional envs use 3.10.
-install_uv_pythons 3.10 3.12
+run_step "install_uv_pythons 3.10 3.12" install_uv_pythons 3.10 3.12
 
 # tox==4.47.3 + tox-uv from the vendored hash-locked requirements (draft D-5);
 # the venv is rebuilt only when the requirements file changes.
-build_tox_venv "$hook_dir/tox-requirements.txt" \
+run_step "build_tox_venv" build_tox_venv \
+    "$hook_dir/tox-requirements.txt" \
     "$HOME/.local/share/sunbeam-workshop/tox-venv"
 
-# Gerrit identity (draft D-6). scripts/setup.sh persists the merged vars doc
-# at /project/.state/<name>.vars.json before launch; <name> is the workshop
-# instance name, which is the container hostname.
-vars_doc="/project/.state/$(hostname).vars.json"
-if [ ! -f "$vars_doc" ]; then
-    echo "ERROR: merged vars doc not found: $vars_doc" >&2
-    echo "       it is written by scripts/setup.sh (host) before launch." >&2
-    exit 1
-fi
-gerrit_username="$(jq -r '.config.gerrit_username // empty' "$vars_doc")"
-if [ -n "$gerrit_username" ]; then
-    git config --global gitreview.username "$gerrit_username"
-else
-    echo "WARNING: config.gerrit_username is unset in $vars_doc;" >&2
-    echo "         git review -s needs gitreview.username (check-health gates on it)." >&2
+# Gerrit identity (draft D-6).
+if [ -n "$vars_doc" ]; then
+    gerrit_username="$(jq -r '.config.gerrit_username // empty' "$vars_doc")"
+    if [ -n "$gerrit_username" ]; then
+        run_step "git config gitreview.username" \
+            git config --global gitreview.username "$gerrit_username"
+    else
+        echo "WARNING: config.gerrit_username is unset in $vars_doc;" >&2
+        echo "         git review -s needs gitreview.username (check-health gates on it)." >&2
+    fi
 fi
 
-seed_atlassian_mcp
-install_agentic_skills
-pin_forge_host_keys
-apply_git_identity "$vars_doc"
+run_step "seed_atlassian_mcp" seed_atlassian_mcp
+run_step "install_agentic_skills" install_agentic_skills
+run_step "pin_forge_host_keys" pin_forge_host_keys
+
+if [ -n "$vars_doc" ]; then
+    run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
+fi

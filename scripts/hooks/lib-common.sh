@@ -107,6 +107,44 @@ pin_forge_host_keys() {
     bash "$script" all
 }
 
+# find_vars_doc <profile> - locate this instance's merged vars doc
+# (/project/.state/<name>.vars.json, persisted by scripts/setup.sh on the
+# host before launch). The hook environment does not carry the workshop name
+# (the runtime-hook contract provides only $SDK, $HOME, $XDG_RUNTIME_DIR and
+# $DBUS_SESSION_BUS_ADDRESS), but the kernel hostname IS the bare workshop
+# name - upstream canonical/workshop templates /etc/hostname from
+# user.workshop.name (<WORKSHOP>.<PROJECT>.wp is only the DNS-level friendly
+# name) - so the primary lookup keys on $(hostname). When it misses (e.g. a
+# manual `just render <name> && just launch <name>` with no persisted vars
+# doc), fall back to scanning the state dir for vars docs of this profile:
+# exactly one match prints its path. Prints the resolved path on stdout and
+# returns 0; returns 1 when there is no match or the profile scan is
+# ambiguous - the caller warns and skips identity-dependent steps, never
+# aborts. SUNBEAM_WORKSHOP_STATE_DIR overrides the state dir (the test
+# suite uses it to point at a fixture dir).
+find_vars_doc() {
+    local profile="${1:?find_vars_doc needs a profile name}"
+    local state_dir="${SUNBEAM_WORKSHOP_STATE_DIR:-/project/.state}"
+    local by_host doc
+    local -a matches=()
+    by_host="${state_dir}/$(hostname).vars.json"
+    if [ -f "$by_host" ]; then
+        printf '%s\n' "$by_host"
+        return 0
+    fi
+    for doc in "${state_dir}"/*.vars.json; do
+        [ -f "$doc" ] || continue
+        if [ "$(jq -r '.profile // empty' "$doc")" = "$profile" ]; then
+            matches+=("$doc")
+        fi
+    done
+    if [ "${#matches[@]}" -eq 1 ]; then
+        printf '%s\n' "${matches[0]}"
+        return 0
+    fi
+    return 1
+}
+
 # apply_git_identity <vars-doc-path> - set the workshop user's git identity
 # from the merged vars doc (/project/.state/<name>.vars.json):
 #   .user.name  -> git config --global user.name
