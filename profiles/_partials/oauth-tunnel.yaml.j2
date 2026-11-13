@@ -1,0 +1,29 @@
+# Shared partial - MCP OAuth callback tunnel + AI-chain connections
+# (drafts D-8, D-9).
+#
+# The opencode SDK pins its MCP OAuth callback listener to localhost:19876
+# (canonical/opencode-sdk sdkcraft.yaml, slot opencode-mcp-oauth-callback).
+# The system tunnel plug below forwards that loopback endpoint from the host
+# so the browser redirect reaches opencode inside the workshop.
+#
+# One partial, two YAML locations, selected by the `oauth_tunnel_part` jinja
+# variable the including template sets before each include:
+#   oauth_tunnel_part = 'plug'        nests under `- name: system`
+#                                     (right after the system-secret include)
+#   oauth_tunnel_part = 'connections' under the top-level `connections:` key
+{% if oauth_tunnel_part == 'plug' %}
+  plugs:
+    mcp-oauth-callback:
+      interface: tunnel
+      endpoint: localhost:19876
+{% elif oauth_tunnel_part == 'connections' %}
+# gh-cli:github-token is a manual connection per the gh-cli-sdk README; the
+# tunnel plug connects to the opencode SDK's OAuth callback slot (D-9).
+- plug: gh-cli:github-token
+  slot: system:github-token
+- plug: system:mcp-oauth-callback
+  slot: opencode:opencode-mcp-oauth-callback
+{% else %}
+{# Deliberate render error: set oauth_tunnel_part before including. #}
+{{ 1 / 0 }}
+{% endif %}

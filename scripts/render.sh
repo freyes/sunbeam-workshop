@@ -61,6 +61,41 @@ if [ "$shadow_warning" = "True" ]; then
     echo "warning: profiles/$name/ shadows the existing instance .workshop/$name/ - rendering the profile (D-13)." >&2
 fi
 
+# Partial symlinks (todo 10): profiles/<profile>/partials/ holds git symlinks
+# into profiles/_partials/ so jinja includes stay inside the loader root.
+# Verify BEFORE the template lookup that every partial in
+# profiles/_partials/ is linked from every profile's partials/ dir and that
+# every symlink under profiles/*/partials/ resolves, so a missing or broken
+# link fails here with a clear message instead of a jinja2 TemplateNotFound
+# later. Roots without partials (todo 5's fixture suites) skip vacuously.
+symlink_error=0
+if [ -d "$ROOT/profiles/_partials" ]; then
+    for partial in "$ROOT"/profiles/_partials/*.yaml.j2; do
+        [ -f "$partial" ] || continue
+        for partials_dir in "$ROOT"/profiles/*/partials; do
+            [ -d "$partials_dir" ] || continue
+            link="$partials_dir/$(basename -- "$partial")"
+            if [ ! -e "$link" ]; then
+                echo "error: missing partial symlink: $link" >&2
+                echo "  every profiles/<profile>/partials/ dir must symlink each profiles/_partials/ partial (git symlinks into ../../_partials/)." >&2
+                symlink_error=1
+            fi
+        done
+    done
+fi
+for partials_dir in "$ROOT"/profiles/*/partials; do
+    [ -d "$partials_dir" ] || continue
+    for link in "$partials_dir"/*; do
+        [ -e "$link" ] && continue
+        [ -L "$link" ] || continue  # unmatched glob, or not a symlink
+        echo "error: broken partial symlink: $link does not resolve to a file under profiles/_partials/." >&2
+        symlink_error=1
+    done
+done
+if [ "$symlink_error" -ne 0 ]; then
+    exit 2
+fi
+
 template="$ROOT/profiles/$profile/workshop.yaml.j2"
 if [ ! -f "$template" ]; then
     echo "error: $template is missing; profile templates land with the profiles work item." >&2
