@@ -1,4 +1,5 @@
 (config)=
+
 # Configuration
 
 Configuration in this repository is data, not code. This page describes the
@@ -66,12 +67,12 @@ object:
 
 Forge behaviour:
 
-- **github** - clones via `gh repo clone`; adds a `fork` remote when
+- `github` - clones via `gh repo clone`; adds a `fork` remote when
   `fork_of` is set.
-- **opendev** - clones over HTTPS, then `git review -s` wires the Gerrit
+- `opendev` - clones over HTTPS, then `git review -s` wires the Gerrit
   remote (`gitreview.username` from `gerrit_username`, else the host user
   name).
-- **launchpad** - clones over HTTPS.
+- `launchpad` - clones over HTTPS.
 
 Existing clones are fetched and fast-forwarded, never re-cloned; dirty
 clones are reported and left untouched. `just lint` parses every

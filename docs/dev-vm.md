@@ -6,8 +6,8 @@ orphan: true
 
 The optional sunbeam sidecar VM (draft D-11): an LXD VM on the **host** that runs the
 things the workshop container cannot - craft builds (destructive-mode on the 26.04
-guest; nested LXD in the container is blocked upstream: canonical/workshop#769,
-canonical/lxd#14770) and a microk8s 1.32-classic + juju 3.6 substrate for
+guest; nested LXD in the container is blocked upstream: `canonical/workshop#769`,
+`canonical/lxd#14770`) and a MicroK8s 1.32-classic + Juju 3.6 substrate for
 func/deployment testing. Sunbeam profile only.
 
 | Command | Effect |
@@ -30,8 +30,8 @@ Hardware comes from `config/vm.json` (`sunbeam-dev`, 8 vCPU / 16 GiB / 100 GiB,
 
 `scripts/vm/cloud-init.yaml.j2` is rendered fresh from the merged vars doc on every
 `vm-create` - snap channels come from `profiles/sunbeam/vars.json`
-(`1.32-classic/stable` microk8s, `3.6/stable` juju), so bump them there. It installs
-the classic craft toolchain (snapcraft, rockcraft, charmcraft), microk8s, juju and
+(`1.32-classic/stable` `microk8s`, `3.6/stable` `juju`), so bump them there. It installs
+the classic craft toolchain (`snapcraft`, `rockcraft`, `charmcraft`), `microk8s`, `juju` and
 LXD, creates the `dev` user (password-less sudo, your injected ssh key), and repoints
 `/etc/resolv.conf` at the real upstream resolver so nested instances get working DNS.
 

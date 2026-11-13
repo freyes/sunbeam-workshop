@@ -1,4 +1,5 @@
 (just-targets)=
+
 # Just targets
 
 `just` is the single entry point for every workflow. Running it with no
