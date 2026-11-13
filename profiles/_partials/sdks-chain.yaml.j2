@@ -1,0 +1,25 @@
+# Shared partial - the AI/tooling SDK chain every profile shares (draft D-3):
+# opencode first, openchamber@latest/edge immediately after (it must follow
+# the opencode SDK), gh-cli, uv@latest/stable, then the in-project
+# project-<profile>-tools SDK (the `profile` jinja var resolves it).
+#
+# A profile whose SDKs must land between uv and the project SDK (packaging:
+# orange-dev-tools@latest/edge, so its apt/squid base lands first) lists them
+# in profiles/<profile>/vars.json, e.g.:
+#   "extra_sdks": [{"name": "orange-dev-tools", "channel": "latest/edge"}]
+#
+# Include under the top-level `sdks:` key, immediately followed by the
+# ssh-agent graft partial.
+- name: opencode
+- name: openchamber
+  channel: latest/edge
+- name: gh-cli
+- name: uv
+  channel: latest/stable
+{%- for sdk in profile_vars.extra_sdks | default([]) %}
+- name: {{ sdk.name }}
+{%- if sdk.channel is defined %}
+  channel: {{ sdk.channel }}
+{%- endif %}
+{%- endfor %}
+- name: project-{{ profile }}-tools
