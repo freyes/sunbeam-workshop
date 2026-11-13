@@ -1,4 +1,4 @@
-"""CLI entry point: ``python -m sunbeam_workshop vars <name>``."""
+"""CLI entry point: ``python -m sunbeam_workshop vars|repos ...``."""
 from __future__ import annotations
 
 import argparse
@@ -10,6 +10,11 @@ from .vars import VarsError, build_vars, find_root
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] == "repos":
+        from . import repos
+
+        return repos.main(argv[1:])
     parser = argparse.ArgumentParser(prog="sunbeam_workshop")
     subparsers = parser.add_subparsers(dest="command", required=True)
     vars_parser = subparsers.add_parser(

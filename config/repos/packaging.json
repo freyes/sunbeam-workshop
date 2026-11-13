@@ -1,0 +1,30 @@
+{
+  "core_repos": [
+    {
+      "name": "keystone",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/ubuntu/+source/keystone"
+    },
+    {
+      "name": "nova",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/ubuntu/+source/nova"
+    },
+    {
+      "name": "glance",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/ubuntu/+source/glance"
+    },
+    {
+      "name": "cinder",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/ubuntu/+source/cinder"
+    },
+    {
+      "name": "neutron",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/ubuntu/+source/neutron"
+    }
+  ],
+  "supporting_repos": []
+}

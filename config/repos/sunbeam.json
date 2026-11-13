@@ -1,0 +1,30 @@
+{
+  "core_repos": [
+    {
+      "name": "sunbeam-charms",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/sunbeam-charms"
+    },
+    {
+      "name": "snap-openstack",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/snap-openstack"
+    },
+    {
+      "name": "snap-cinder-volume",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/snap-cinder-volume"
+    },
+    {
+      "name": "snap-openstack-hypervisor",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/snap-openstack-hypervisor"
+    },
+    {
+      "name": "ubuntu-openstack-rocks",
+      "forge": "github",
+      "url": "https://github.com/canonical/ubuntu-openstack-rocks"
+    }
+  ],
+  "supporting_repos": []
+}
