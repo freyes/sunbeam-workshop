@@ -1,0 +1,19 @@
+{#- Shared partial - the top-level `actions:` block (user-level
+    customization). The merged actions mapping (profile vars + user layers,
+    by name; scripts/sunbeam_workshop/vars.py build_vars_full) renders as
+    block scalars sorted by name (dictsort) for deterministic output; `|-`
+    plus indent(4, true) keeps every body valid YAML. Re-parse is exact for
+    bodies without a trailing newline; `|-` normalizes a body's single
+    trailing newline (block-scalar semantics, execution-inert under
+    bash -elo pipefail). CRITICAL (plan trap 10): when the mapping is EMPTY
+    this partial must emit ZERO bytes - the golden byte-identity baseline
+    depends on it. Jinja comments only: nothing here may reach the rendered
+    yaml. Included LAST in each profile template, after the connections
+    include. -#}
+{%- if actions -%}
+actions:
+{%- for name, body in actions | dictsort %}
+  {{ name }}: |-
+{{ body | indent(4, true) }}
+{%- endfor %}
+{% endif -%}

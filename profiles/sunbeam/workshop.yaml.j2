@@ -12,6 +12,10 @@
 #   5. oauth-tunnel with oauth_tunnel_part = 'connections' under
 #      `connections:` (gh-cli:github-token -> system:github-token and
 #      system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback).
+{#- 6. actions LAST at top level, after the connections include: renders the
+       merged `actions:` mapping, zero bytes when empty (plan trap 10). A
+       jinja comment, not a # line - the # header above is byte-pinned by
+       the golden baseline (scripts/tests/golden/). #}
 name: {{ workshop_name }}
 base: ubuntu@26.04
 sdks:
@@ -21,3 +25,4 @@ sdks:
 {% include 'partials/ssh-agent.yaml.j2' -%}
 connections:
 {% set oauth_tunnel_part = 'connections' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}
+{% include 'partials/actions.yaml.j2' -%}
