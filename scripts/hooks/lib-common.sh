@@ -165,3 +165,87 @@ apply_git_identity() {
         done < <(jq -r '.profile_vars.git | to_entries[] | "\(.key)\t\(.value)"' "$vars_doc")
     fi
 }
+
+# run_step <label> <cmd...> - run one provisioning step loudly but
+# non-fatally: a failure prints an ERROR and the hook continues, because
+# check-health is the authoritative gate and names the missing piece via
+# workshopctl set-health --code (ck8s-dev setup-project.base pattern - a
+# swallowed failure once left a "ready" workshop without its tooling).
+# Relocated verbatim from the per-profile setup-project hooks, where it was
+# defined identically three times.
+run_step() {
+    local label="$1"
+    shift
+    if ! "$@"; then
+        echo "ERROR: ${label} failed; check-health will report it" >&2
+    fi
+}
+
+# run_user_fragments <hook> <profile> - source user lifecycle fragments from
+# ${SUNBEAM_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}: for each
+# scope in order (all, then <profile>, then $(hostname)) every
+# "<root>/<scope>/<hook>.d/*.sh" file is sourced in lexical order inside its
+# own subshell, so a fragment's exit or `set -e` death cannot kill the
+# sourcing hook (fragments are user code; the subshell is the containment,
+# and the subshell still sees every helper defined here). Non-.sh files and
+# missing/empty dirs are a silent no-op. Per-fragment start/fail lines go to
+# stderr. Failed fragment basenames (without .sh) collect in the global
+# USER_FRAGMENT_FAILURES array; returns 1 when any fragment failed, else 0.
+# setup-project calls this through run_step (fail-soft, last step);
+# check-health calls it fail-hard immediately before its final set-health
+# okay. setup-base can never have fragments: it runs pre-mount, when
+# /project is not mounted.
+run_user_fragments() {
+    local hook="${1:?run_user_fragments needs a hook name}"
+    local profile="${2:?run_user_fragments needs a profile name}"
+    local root="${SUNBEAM_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}"
+    local scope dir fragment base
+    USER_FRAGMENT_FAILURES=()
+    for scope in all "$profile" "$(hostname)"; do
+        dir="$root/$scope/$hook.d"
+        [ -d "$dir" ] || continue
+        for fragment in "$dir"/*.sh; do
+            [ -f "$fragment" ] || continue
+            base="$(basename "$fragment" .sh)"
+            echo "user fragment: sourcing $scope/$hook.d/$base.sh" >&2
+            if ! (
+                # shellcheck disable=SC1090
+                . "$fragment"
+            ); then
+                echo "ERROR: user fragment $scope/$hook.d/$base.sh failed; recorded in USER_FRAGMENT_FAILURES" >&2
+                USER_FRAGMENT_FAILURES+=("$base")
+            fi
+        done
+    done
+    [ "${#USER_FRAGMENT_FAILURES[@]}" -eq 0 ]
+}
+
+# run_once <marker> - idempotency guard for fragments and other one-shot
+# steps: returns 0 the first time it is called with a marker (recording it
+# under ${XDG_STATE_HOME:-$HOME/.local/state}/sunbeam-workshop/run-once/)
+# and 1 on every later call, so a re-run hook does not duplicate one-shot
+# work.
+run_once() {
+    local marker="${1:?run_once needs a marker name}"
+    local dir="${XDG_STATE_HOME:-$HOME/.local/state}/sunbeam-workshop/run-once"
+    mkdir -p "$dir"
+    if [ -e "$dir/$marker" ]; then
+        return 1
+    fi
+    : > "$dir/$marker"
+    return 0
+}
+
+# as_workshop_user <cmd...> - run a command as the workshop user (uid 1000)
+# via sudo -u. For root-context fragments (check-health) that must act on
+# the workshop user's environment; setup-project already runs as that user
+# and never needs this.
+as_workshop_user() {
+    local workshop_user
+    workshop_user="$(getent passwd 1000 | cut -d: -f1)"
+    [ -n "$workshop_user" ] || {
+        echo "ERROR: unable to resolve workshop user for uid 1000" >&2
+        return 1
+    }
+    sudo -u "$workshop_user" "$@"
+}

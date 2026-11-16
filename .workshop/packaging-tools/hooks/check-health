@@ -14,6 +14,15 @@
 
 set -euo pipefail
 
+# Shared hook library, tracked at scripts/hooks/lib-common.sh in the repo and
+# mounted at /project inside the container. Sourced here for
+# run_user_fragments only: this hook runs as root, so the $HOME-based
+# provisioning helpers must never be called from it. The shellcheck source
+# directive is repo-root-relative so `shellcheck -x` from the repo root can
+# follow it.
+# shellcheck source=scripts/hooks/lib-common.sh
+. /project/scripts/hooks/lib-common.sh
+
 fail() {
     local code="$1" message="$2"
     workshopctl set-health --code="$code" error "$message"
@@ -33,5 +42,14 @@ user_home="$(getent passwd 1000 | cut -d: -f6)"
 [ -f "$user_home/.sbuildrc" ] \
     || fail "missing-sbuildrc" \
         "$user_home/.sbuildrc does not exist; orange-dev-tools setup-project did not complete"
+
+# User lifecycle fragments (config/local/hooks/{all,packaging,<hostname>}/
+# check-health.d/*.sh) run fail-hard: the first failure's name becomes the
+# set-health code and the workshop never reaches Ready.
+if ! run_user_fragments check-health packaging; then
+    workshopctl set-health --code="user-fragment-${USER_FRAGMENT_FAILURES[0]}" error \
+        "user fragment failed: ${USER_FRAGMENT_FAILURES[*]}"
+    exit 1
+fi
 
 workshopctl set-health okay
