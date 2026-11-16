@@ -1,35 +1,361 @@
 {
   "core_repos": [
     {
-      "name": "charm-keystone",
+      "name": "charm-aodh",
       "forge": "opendev",
-      "url": "https://opendev.org/openstack/charm-keystone",
-      "gerrit": "review.opendev.org"
+      "url": "https://opendev.org/openstack/charm-aodh"
     },
     {
-      "name": "charm-nova-compute",
+      "name": "charm-barbican",
       "forge": "opendev",
-      "url": "https://opendev.org/openstack/charm-nova-compute",
-      "gerrit": "review.opendev.org"
+      "url": "https://opendev.org/openstack/charm-barbican"
     },
     {
-      "name": "charm-neutron-openvswitch",
+      "name": "charm-barbican-vault",
       "forge": "opendev",
-      "url": "https://opendev.org/openstack/charm-neutron-openvswitch",
-      "gerrit": "review.opendev.org"
+      "url": "https://opendev.org/openstack/charm-barbican-vault"
+    },
+    {
+      "name": "charm-ceilometer",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-ceilometer"
+    },
+    {
+      "name": "charm-ceilometer-agent",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-ceilometer-agent"
     },
     {
       "name": "charm-cinder",
       "forge": "opendev",
-      "url": "https://opendev.org/openstack/charm-cinder",
-      "gerrit": "review.opendev.org"
+      "url": "https://opendev.org/openstack/charm-cinder"
+    },
+    {
+      "name": "charm-cinder-backup",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-backup"
+    },
+    {
+      "name": "charm-cinder-ceph",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-ceph"
+    },
+    {
+      "name": "charm-openstack-dashboard",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-openstack-dashboard"
+    },
+    {
+      "name": "charm-designate",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-designate"
+    },
+    {
+      "name": "charm-designate-bind",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-designate-bind"
     },
     {
       "name": "charm-glance",
       "forge": "opendev",
-      "url": "https://opendev.org/openstack/charm-glance",
-      "gerrit": "review.opendev.org"
+      "url": "https://opendev.org/openstack/charm-glance"
+    },
+    {
+      "name": "charm-glance-simplestreams-sync",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-glance-simplestreams-sync"
+    },
+    {
+      "name": "charm-gnocchi",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-gnocchi"
+    },
+    {
+      "name": "charm-heat",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-heat"
+    },
+    {
+      "name": "charm-keystone",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-keystone"
+    },
+    {
+      "name": "charm-keystone-ldap",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-keystone-ldap"
+    },
+    {
+      "name": "charm-manila",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-manila"
+    },
+    {
+      "name": "charm-manila-generic",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-manila-generic"
+    },
+    {
+      "name": "charm-manila-ganesha",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-manila-ganesha"
+    },
+    {
+      "name": "charm-masakari",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-masakari"
+    },
+    {
+      "name": "charm-masakari-monitors",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-masakari-monitors"
+    },
+    {
+      "name": "charm-neutron-api",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-api"
+    },
+    {
+      "name": "charm-neutron-gateway",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-gateway"
+    },
+    {
+      "name": "charm-neutron-openvswitch",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-openvswitch"
+    },
+    {
+      "name": "charm-nova-cloud-controller",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-nova-cloud-controller"
+    },
+    {
+      "name": "charm-nova-compute",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-nova-compute"
+    },
+    {
+      "name": "charm-nova-compute-nvidia-vgpu",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-nova-compute-nvidia-vgpu"
+    },
+    {
+      "name": "charm-nova-cell-controller",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-nova-cell-controller"
+    },
+    {
+      "name": "charm-octavia",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-octavia"
+    },
+    {
+      "name": "charm-placement",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-placement"
+    },
+    {
+      "name": "charm-swift-proxy",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-swift-proxy"
+    },
+    {
+      "name": "charm-swift-storage",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-swift-storage"
+    },
+    {
+      "name": "charm-cinder-backup-swift-proxy",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-backup-swift-proxy"
+    },
+    {
+      "name": "charm-cinder-lvm",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-lvm"
+    },
+    {
+      "name": "charm-cinder-nimblestorage",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-nimblestorage"
+    },
+    {
+      "name": "charm-cinder-purestorage",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-purestorage"
+    },
+    {
+      "name": "charm-cinder-solidfire",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-solidfire"
+    },
+    {
+      "name": "charm-cinder-netapp",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-netapp"
+    },
+    {
+      "name": "charm-cinder-three-par",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-cinder-three-par"
+    },
+    {
+      "name": "charm-ironic-api",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-ironic-api"
+    },
+    {
+      "name": "charm-ironic-conductor",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-ironic-conductor"
+    },
+    {
+      "name": "charm-ironic-dashboard",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-ironic-dashboard"
+    },
+    {
+      "name": "charm-keystone-kerberos",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-keystone-kerberos"
+    },
+    {
+      "name": "charm-keystone-openidc",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-keystone-openidc"
+    },
+    {
+      "name": "charm-keystone-saml-mellon",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-keystone-saml-mellon"
+    },
+    {
+      "name": "charm-magnum",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-magnum"
+    },
+    {
+      "name": "charm-magnum-dashboard",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-magnum-dashboard"
+    },
+    {
+      "name": "charm-manila-dashboard",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-manila-dashboard"
+    },
+    {
+      "name": "charm-manila-netapp",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-manila-netapp"
+    },
+    {
+      "name": "charm-neutron-api-plugin-arista",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-api-plugin-arista"
+    },
+    {
+      "name": "charm-neutron-api-plugin-ironic",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-api-plugin-ironic"
+    },
+    {
+      "name": "charm-neutron-api-plugin-ovn",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-api-plugin-ovn"
+    },
+    {
+      "name": "charm-neutron-dynamic-routing",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-neutron-dynamic-routing"
+    },
+    {
+      "name": "charm-octavia-dashboard",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-octavia-dashboard"
+    },
+    {
+      "name": "charm-octavia-diskimage-retrofit",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-octavia-diskimage-retrofit"
+    },
+    {
+      "name": "charm-watcher",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-watcher"
+    },
+    {
+      "name": "charm-watcher-dashboard",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-watcher-dashboard"
     }
   ],
-  "supporting_repos": []
+  "supporting_repos": [
+    {
+      "name": "charm-discoveryserver",
+      "forge": "github",
+      "url": "https://github.com/openstack-charmers/charm-discoveryserver"
+    },
+    {
+      "name": "charm-hacluster",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-hacluster"
+    },
+    {
+      "name": "charm-magpie",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-magpie"
+    },
+    {
+      "name": "charm-mysql-innodb-cluster",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-mysql-innodb-cluster"
+    },
+    {
+      "name": "charm-mysql-router",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-mysql-router"
+    },
+    {
+      "name": "charm-percona-cluster",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-percona-cluster"
+    },
+    {
+      "name": "charm-rabbitmq-server",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-rabbitmq-server"
+    },
+    {
+      "name": "charm-woodpecker",
+      "forge": "github",
+      "url": "https://github.com/openstack-charmers/charm-woodpecker"
+    },
+    {
+      "name": "charm-vault",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-vault"
+    },
+    {
+      "name": "charm-openstack-loadbalancer",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-openstack-loadbalancer"
+    },
+    {
+      "name": "charm-ldap-test-fixture",
+      "forge": "github",
+      "url": "https://github.com/openstack-charmers/charm-ldap-test-fixture"
+    },
+    {
+      "name": "charm-openidc-test-fixture",
+      "forge": "github",
+      "url": "https://github.com/openstack-charmers/charm-openidc-test-fixture"
+    },
+    {
+      "name": "charm-pacemaker-remote",
+      "forge": "opendev",
+      "url": "https://opendev.org/openstack/charm-pacemaker-remote"
+    }
+  ]
 }
