@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    ``just`` is now installed inside every workshop container: each
+    profile's ``setup-base`` hook apt-installs it from the Ubuntu archive
+    (same rationale as ``jq`` - no SDK in the chain guarantees it), and
+    each ``check-health`` gates it on PATH. The runbook's command list now
+    works from inside the workshop as documented: guarded recipes such as
+    ``just repos`` refuse with their assert-host message instead of a bare
+    ``command not found``.
