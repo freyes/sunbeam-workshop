@@ -26,7 +26,10 @@
 # git arrives as a hard dependency of git-buildpackage (gbp is a git tool) and
 # serves install_agentic_skills in setup-project. jq is installed explicitly:
 # scripts/hooks/lib-common.sh (sourced by setup-project) needs it for the MCP
-# seed and git identity, and no SDK in the chain guarantees it.
+# seed and git identity, and no SDK in the chain guarantees it. just is
+# installed for the same reason: the runbook's command list must work inside
+# the workshop (guarded recipes refuse with their assert-host message), and
+# no SDK in the chain guarantees it.
 
 set -euo pipefail
 
@@ -38,6 +41,7 @@ pkgs=(
     autopkgtest
     sbuild-launchpad-chroot
     jq
+    just
 )
 
 apt-get update
