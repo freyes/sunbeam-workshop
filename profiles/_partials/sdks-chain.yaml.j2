@@ -1,3 +1,12 @@
+{#- Dumb emitter over the computed `sdks` vars-doc list (assembled in Python
+    by scripts/sunbeam_workshop/chain.py: base chain -> profile extra_sdks ->
+    user sdks.add -> project-<profile>-tools). Emission contract: `- name:`
+    always; `channel:`, `plugs:`, `slots:` only when present (the default
+    chain carries no plugs/slots, so the golden byte-identity baseline
+    holds). The YAML `#` comment block below is byte-pinned by the golden
+    baseline (scripts/tests/golden/) - the authoritative chain documentation
+    lives in scripts/sunbeam_workshop/chain.py and the profile-authoring
+    skill. -#}
 # Shared partial - the AI/tooling SDK chain every profile shares (draft D-3):
 # opencode first, openchamber@latest/edge immediately after (it must follow
 # the opencode SDK), gh-cli, uv@latest/stable, then the in-project
@@ -10,16 +19,21 @@
 #
 # Include under the top-level `sdks:` key, immediately followed by the
 # ssh-agent graft partial.
-- name: opencode
-- name: openchamber
-  channel: latest/edge
-- name: gh-cli
-- name: uv
-  channel: latest/stable
-{%- for sdk in profile_vars.extra_sdks | default([]) %}
+{%- for sdk in sdks %}
 - name: {{ sdk.name }}
 {%- if sdk.channel is defined %}
   channel: {{ sdk.channel }}
 {%- endif %}
+{%- if sdk.plugs is defined and sdk.plugs %}
+  plugs:
+{%- for plug in sdk.plugs %}
+    {{ plug }}: null
 {%- endfor %}
-- name: project-{{ profile }}-tools
+{%- endif %}
+{%- if sdk.slots is defined and sdk.slots %}
+  slots:
+{%- for slot in sdk.slots %}
+    {{ slot }}: null
+{%- endfor %}
+{%- endif %}
+{%- endfor %}

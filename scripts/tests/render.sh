@@ -50,6 +50,39 @@ run_render() {
     env TMPDIR="${root}/tmp" SUNBEAM_WORKSHOP_ROOT="${root}" bash "${RENDER}" "${name}"
 }
 
+# run_render variant for tests that materialize user vars layers: the
+# kill-switch must NOT leak in from the outer environment (the golden suite
+# exports it), so these runs explicitly unset it.
+run_render_layers() {
+    local root=$1 name=$2
+    env -u SUNBEAM_WORKSHOP_NO_USER_LAYERS \
+        TMPDIR="${root}/tmp" SUNBEAM_WORKSHOP_ROOT="${root}" bash "${RENDER}" "${name}"
+}
+
+# Partials-backed fixture: profiles/fixture renders through COPIES of the real
+# sdks-chain + actions partials (linked from profiles/fixture/partials/ so the
+# render.sh symlink gate sees the same shape as the real tree). This exercises
+# the real dumb emitter and the real actions partial end-to-end.
+make_partials_fixture() {
+    local root=$1
+    make_fixture "${root}"
+    mkdir -p "${root}/profiles/_partials" "${root}/profiles/fixture/partials"
+    local partial
+    for partial in sdks-chain actions; do
+        cp "${PROJECT_DIR}/profiles/_partials/${partial}.yaml.j2" \
+            "${root}/profiles/_partials/${partial}.yaml.j2"
+        ln -s "../../_partials/${partial}.yaml.j2" \
+            "${root}/profiles/fixture/partials/${partial}.yaml.j2"
+    done
+    cat > "${root}/profiles/fixture/workshop.yaml.j2" <<'EOF'
+name: {{ workshop_name }}
+base: ubuntu@26.04
+sdks:
+{% include 'partials/sdks-chain.yaml.j2' -%}
+{% include 'partials/actions.yaml.j2' -%}
+EOF
+}
+
 test_happy_render_fixture_instance() (
     local root output out
     root=$(new_root); make_fixture "${root}"
@@ -176,6 +209,94 @@ test_missing_template_exit_2() (
         || fail "missing-template diagnostic absent: ${output}"
 )
 
+# Format equivalence: the same user layer content as config/local/vars/all.json
+# in one root and all.yaml in another must render byte-identical workshop yaml.
+test_layer_format_equivalence_json_vs_yaml() (
+    local root_json root_yaml
+    root_json=$(new_root); make_partials_fixture "${root_json}"
+    root_yaml=$(new_root); make_partials_fixture "${root_yaml}"
+    mkdir -p "${root_json}/config/local/vars" "${root_yaml}/config/local/vars"
+    cat > "${root_json}/config/local/vars/all.json" <<'EOF'
+{
+  "sdks": {
+    "add": [
+      {"name": "extra-one", "channel": "latest/candidate", "plugs": ["home"]}
+    ]
+  },
+  "actions": {
+    "fmt-probe": "echo json-vs-yaml\n- dash line\nexit 0"
+  }
+}
+EOF
+    cat > "${root_yaml}/config/local/vars/all.yaml" <<'EOF'
+sdks:
+  add:
+    - name: extra-one
+      channel: latest/candidate
+      plugs:
+        - home
+actions:
+  fmt-probe: |-
+    echo json-vs-yaml
+    - dash line
+    exit 0
+EOF
+    run_render_layers "${root_json}" fixture-fmt >/dev/null \
+        || fail "json-layer render failed."
+    run_render_layers "${root_yaml}" fixture-fmt >/dev/null \
+        || fail "yaml-layer render failed."
+    cmp "${root_json}/.workshop/fixture-fmt.yaml" "${root_yaml}/.workshop/fixture-fmt.yaml" \
+        || fail "json vs yaml user layer rendered different bytes."
+    grep -q '^actions:$' "${root_json}/.workshop/fixture-fmt.yaml" \
+        || fail "equivalence render is missing the top-level actions: block."
+    grep -q '^  fmt-probe: |-$' "${root_json}/.workshop/fixture-fmt.yaml" \
+        || fail "equivalence render is missing the fmt-probe block scalar."
+)
+
+# Synthetic actions: a user layer with two actions (one multi-line body) must
+# render a well-formed top-level actions: block that the vendored schema
+# accepts (check-render.sh), and an empty mapping must emit zero bytes.
+test_synthetic_actions_wellformed() (
+    local root out
+    root=$(new_root); make_partials_fixture "${root}"
+    mkdir -p "${root}/config/local/vars"
+    cat > "${root}/config/local/vars/all.yaml" <<'EOF'
+actions:
+  web-rebuild: |-
+    set -e
+    snapcraft pack
+    - echo dash-line
+    echo done
+  ping: "echo pong"
+EOF
+    run_render_layers "${root}" fixture-act >/dev/null \
+        || fail "synthetic-actions render failed."
+    out="${root}/.workshop/fixture-act.yaml"
+    grep -q '^actions:$' "${out}" || fail "rendered yaml has no top-level actions: block."
+    grep -q '^  web-rebuild: |-$' "${out}" || fail "multi-line action is not a |- block scalar."
+    grep -q '^    - echo dash-line$' "${out}" || fail "dash-leading body line is not indented into the scalar."
+    grep -q '^  ping: |-$' "${out}" || fail "single-line action is not a |- block scalar."
+    bash "${PROJECT_DIR}/scripts/check-render.sh" "${out}" >/dev/null \
+        || fail "synthetic-actions render failed vendored-schema validation."
+    # Empty actions mapping: the actions partial must emit zero bytes (plan
+    # trap 10), so the render is byte-identical to a no-layer render of the
+    # same name in a twin root.
+    local root_empty root_plain
+    root_empty=$(new_root); make_partials_fixture "${root_empty}"
+    root_plain=$(new_root); make_partials_fixture "${root_plain}"
+    mkdir -p "${root_empty}/config/local/vars"
+    printf 'actions: {}\n' > "${root_empty}/config/local/vars/all.yaml"
+    run_render_layers "${root_empty}" fixture >/dev/null \
+        || fail "empty-actions render failed."
+    run_render_layers "${root_plain}" fixture >/dev/null \
+        || fail "no-layer render failed."
+    if grep -q '^actions:$' "${root_empty}/.workshop/fixture.yaml"; then
+        fail "empty actions mapping still emitted an actions: block."
+    fi
+    cmp "${root_empty}/.workshop/fixture.yaml" "${root_plain}/.workshop/fixture.yaml" \
+        || fail "empty actions mapping changed the rendered bytes."
+)
+
 test_happy_render_fixture_instance
 test_happy_render_bare_profile
 test_unknown_prefix_exit_3
@@ -186,4 +307,6 @@ test_temp_files_cleaned_up
 test_shadow_warning_printed
 test_post_validation_blocks_bad_render
 test_missing_template_exit_2
+test_layer_format_equivalence_json_vs_yaml
+test_synthetic_actions_wellformed
 echo "render tests passed."
