@@ -1,0 +1,105 @@
+# Charmed profile - classic charmed OpenStack development (draft rows D-3,
+# D-6, IS-5): the shared AI/tooling SDK chain plus the in-project
+# project-charmed-tools SDK carrying the gerrit toolchain hooks.
+#
+# Rendered by scripts/render.sh; include order follows the todo-10 partials
+# contract: system-secret first (its `- name: system` entry also carries the
+# oauth-tunnel plug), then the SDK chain, then the ssh-agent graft nesting
+# under the trailing project-<profile>-tools entry.
+name: charmed
+base: ubuntu@26.04
+sdks:
+# Shared partial - system SDK github-token secret slot (draft D-8).
+#
+# The gh-cli SDK reads its token through the github-token secret plug; this
+# slot names the host keyring item, never the token value
+# (canonical/gh-cli-sdk README, "Authenticate"). `username: ""` selects the
+# account gh is currently using on the host, so one definition works for
+# everyone on the project; without it the slot matches several keyring items
+# and fails with "multiple secrets match".
+#
+# After launch the plug is wired with:
+#   workshop connect <name>/gh-cli:github-token <name>/system:github-token
+# (the connection entry itself lives in oauth-tunnel.yaml.j2).
+#
+# Include first under the top-level `sdks:` key; the oauth-tunnel "plug"
+# fragment nests under this same `- name: system` entry.
+- name: system
+  slots:
+    github-token:
+      interface: secret
+      attributes:
+        service: "gh:github.com"
+        username: ""
+# Shared partial - MCP OAuth callback tunnel + AI-chain connections
+# (drafts D-8, D-9).
+#
+# The opencode SDK pins its MCP OAuth callback listener to localhost:19876
+# (canonical/opencode-sdk sdkcraft.yaml, slot opencode-mcp-oauth-callback).
+# The system tunnel plug below forwards that loopback endpoint from the host
+# so the browser redirect reaches opencode inside the workshop.
+#
+# One partial, two YAML locations, selected by the `oauth_tunnel_part` jinja
+# variable the including template sets before each include:
+#   oauth_tunnel_part = 'plug'        nests under `- name: system`
+#                                     (right after the system-secret include)
+#   oauth_tunnel_part = 'connections' under the top-level `connections:` key
+
+  plugs:
+    mcp-oauth-callback:
+      interface: tunnel
+      endpoint: localhost:19876
+
+# Shared partial - the AI/tooling SDK chain every profile shares (draft D-3):
+# opencode first, openchamber@latest/edge immediately after (it must follow
+# the opencode SDK), gh-cli, uv@latest/stable, then the in-project
+# project-<profile>-tools SDK (the `profile` jinja var resolves it).
+#
+# A profile whose SDKs must land between uv and the project SDK (packaging:
+# orange-dev-tools@latest/edge, so its apt/squid base lands first) lists them
+# in profiles/<profile>/vars.json, e.g.:
+#   "extra_sdks": [{"name": "orange-dev-tools", "channel": "latest/edge"}]
+#
+# Include under the top-level `sdks:` key, immediately followed by the
+# ssh-agent graft partial.
+- name: opencode
+- name: openchamber
+  channel: latest/edge
+- name: gh-cli
+- name: uv
+  channel: latest/stable
+- name: project-charmed-tools
+# Shared partial - ssh-agent plug grafted onto the in-project tools SDK
+# (draft A-10): forwards the host SSH agent so git over ssh (GitHub, Gerrit,
+# Launchpad) works inside the workshop without copying private keys.
+# awesome-multirepo hung this plug on vscode-remote, which is forbidden here.
+# The system:ssh-agent slot is implicit, so no explicit connection entry is
+# needed (workshop auto-connects same-interface plug/slot pairs).
+#
+# Include immediately after the sdks-chain include so this graft nests under
+# the trailing project-<profile>-tools entry.
+  plugs:
+    ssh-agent:
+      interface: ssh-agent
+connections:
+# Shared partial - MCP OAuth callback tunnel + AI-chain connections
+# (drafts D-8, D-9).
+#
+# The opencode SDK pins its MCP OAuth callback listener to localhost:19876
+# (canonical/opencode-sdk sdkcraft.yaml, slot opencode-mcp-oauth-callback).
+# The system tunnel plug below forwards that loopback endpoint from the host
+# so the browser redirect reaches opencode inside the workshop.
+#
+# One partial, two YAML locations, selected by the `oauth_tunnel_part` jinja
+# variable the including template sets before each include:
+#   oauth_tunnel_part = 'plug'        nests under `- name: system`
+#                                     (right after the system-secret include)
+#   oauth_tunnel_part = 'connections' under the top-level `connections:` key
+
+# gh-cli:github-token is a manual connection per the gh-cli-sdk README; the
+# tunnel plug connects to the opencode SDK's OAuth callback slot (D-9).
+- plug: gh-cli:github-token
+  slot: system:github-token
+- plug: system:mcp-oauth-callback
+  slot: opencode:opencode-mcp-oauth-callback
+
