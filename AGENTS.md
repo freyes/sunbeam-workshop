@@ -86,10 +86,13 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   vm/                    Sidecar VM lifecycle (create/destroy/shell/status,
                          cloud-init.yaml.j2, lib-vm.sh).
   ci/render-matrix.sh    The D-15 bounded render matrix (six enumerated names).
+  ci/user-layers-fixture.sh  CI proof of the config/local/vars/ contract with
+                         synthetic user layers (render + vars-doc assertions).
   qa/host/sdk-gate.sh    The D-19 host-side SDK verification gate.
   tests/                 Shell suites (discovered live by run.sh) + pytest.
   sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
-                         config layer merge (config.py), repo manager (repos.py).
+                         config layer merge (config.py), repo manager (repos.py),
+                         `just layers` report (layers.py).
 docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
                        four Diataxis quadrants (tutorial/, how-to/, explanation/,
                        reference/) plus dev-vm.md (sidecar VM). Build and check
@@ -142,6 +145,8 @@ side, and the dangerous ones only work where they must.
 | `just render <name>` | Render `.workshop/<name>.yaml` from the profile template + merged vars | - |
 | `just launch <name>` | Launch a rendered instance (`workshop launch` passthrough) | - |
 | `just shell <name>` | Interactive shell in a running instance | - |
+| `just run <name> <actions...>` | Run merged actions (profile vars + user layers) in a running instance (`workshop run` passthrough) | - |
+| `just layers <name>` | Read-only user-customization report: applied layers + digests, chain diff, actions, fragments, user SDKs, drift vs `.state/<name>.vars.json` | read-only |
 | `just stop <name>` / `just remove <name>` | Stop / remove an instance | - |
 | `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `/project/git` (github, opendev+Gerrit, launchpad) | `assert-host` |
 | `just secret-setup` / `just secret-setup <name>` | Store the GitHub token in the host keyring, log in host `gh`, wire the instance's gh-cli secret plug | `assert-host` |
@@ -323,6 +328,8 @@ activity.
 | `just render <name>` | Render `.workshop/<name>.yaml` from the profile template and merged vars |
 | `just launch <name>` | Launch a rendered workshop instance |
 | `just shell <name>` | Interactive bash shell in a running instance |
+| `just run <name> +actions` | Run one or more actions in a running instance |
+| `just layers <name>` | Print the user-customization layers report (read-only) |
 | `just stop <name>` | Stop a running instance |
 | `just remove <name>` | Remove an instance and its container |
 | `just doctor [name]` | Read-only host prerequisite checks |

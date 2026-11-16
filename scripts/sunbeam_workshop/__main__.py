@@ -1,4 +1,4 @@
-"""CLI entry point: ``python -m sunbeam_workshop vars|repos ...``."""
+"""CLI entry point: ``python -m sunbeam_workshop vars|repos|layers ...``."""
 from __future__ import annotations
 
 import argparse
@@ -6,6 +6,7 @@ import json
 import sys
 from pathlib import Path
 
+from .layers import build_report
 from .loader import DocError
 from .uservars import UserVarsError
 from .vars import VarsError, build_vars_full, find_root
@@ -23,6 +24,11 @@ def main(argv: list[str] | None = None) -> int:
         "vars", help="emit the merged vars doc for workshop NAME as JSON"
     )
     vars_parser.add_argument("name", metavar="NAME")
+    layers_parser = subparsers.add_parser(
+        "layers",
+        help="print the read-only user-customization report for workshop NAME",
+    )
+    layers_parser.add_argument("name", metavar="NAME")
     args = parser.parse_args(argv)
 
     if args.command == "vars":
@@ -47,6 +53,17 @@ def main(argv: list[str] | None = None) -> int:
             f"-{len(diff.removed)}; actions +{result.actions_added}",
             file=sys.stderr,
         )
+        return 0
+    if args.command == "layers":
+        try:
+            report = build_report(find_root(Path.cwd()), args.name)
+        except VarsError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return exc.exit_code
+        except (DocError, UserVarsError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        sys.stdout.write(report)
         return 0
     parser.error(f"unknown command {args.command!r}")  # pragma: no cover
     return 2  # pragma: no cover

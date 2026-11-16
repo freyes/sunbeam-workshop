@@ -63,6 +63,8 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install jinja2
         run: python3 -m pip install "jinja2==3.1.6"
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
       - name: Validate config JSON files
         run: |
           set -euo pipefail
@@ -71,6 +73,63 @@ jobs:
               python3 -m json.tool "$f" > /dev/null
           done
           echo "json OK: config/**/*.json all parse"
+      # Twin of the lint.sh gate-5 yaml block; keep both copies in sync. The
+      # uv project python is required (PyYAML trap, render.sh L114-117).
+      - name: Validate yaml data docs, coexistence, and .yml rejection
+        run: |
+          set -euo pipefail
+          uv run --frozen --project scripts python - <<'PYEOF'
+          import glob
+          import sys
+
+          import yaml
+
+          bad = 0
+
+
+          def fail(message):
+              global bad
+              print(f"config-validate: {message}", file=sys.stderr)
+              bad += 1
+
+
+          # `.yml` is never consulted by the loader; reject it wherever a
+          # data doc could live, with a rename hint.
+          yml_files = sorted(
+              glob.glob("config/**/*.yml", recursive=True)
+              + glob.glob("profiles/**/*.yml", recursive=True)
+          )
+          for path in yml_files:
+              fail(f"{path}: '.yml' files are never read; rename to {path[:-4] + '.yaml'}")
+
+          # One slot = <base>.json OR <base>.yaml, never both
+          # (loader.load_doc raises the same coexistence error at load time).
+          for tree in ("config", "profiles"):
+              json_stems = {p[: -len(".json")] for p in glob.glob(f"{tree}/**/*.json", recursive=True)}
+              yaml_stems = {p[: -len(".yaml")] for p in glob.glob(f"{tree}/**/*.yaml", recursive=True)}
+              for stem in sorted(json_stems & yaml_stems):
+                  fail(f"{stem}.json and {stem}.yaml coexist; keep exactly one format per slot")
+
+          # Parse every YAML data doc. profiles/*/vars.json is included:
+          # JSON is a YAML subset, so yaml.safe_load validates both formats
+          # of the vars slot. config/local/ is gitignored and usually absent;
+          # the globs simply find nothing then.
+          data_docs = sorted(
+              glob.glob("config/**/*.yaml", recursive=True)
+              + glob.glob("profiles/*/vars.json")
+              + glob.glob("profiles/*/vars.yaml")
+          )
+          for path in data_docs:
+              try:
+                  with open(path, encoding="utf-8") as handle:
+                      yaml.safe_load(handle)
+              except (yaml.YAMLError, UnicodeDecodeError) as exc:
+                  fail(f"{path}: does not parse: {exc}")
+
+          print(f"yaml data docs OK: {len(data_docs)} files parse")
+          if bad:
+              sys.exit(1)
+          PYEOF
       - name: Parse jinja2 templates (syntax only; includes not resolved)
         run: |
           set -euo pipefail
