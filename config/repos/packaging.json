@@ -1,29 +1,924 @@
 {
   "core_repos": [
     {
-      "name": "keystone",
+      "name": "alembic",
       "forge": "launchpad",
-      "url": "https://git.launchpad.net/ubuntu/+source/keystone"
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/alembic"
     },
     {
-      "name": "nova",
+      "name": "aodh",
       "forge": "launchpad",
-      "url": "https://git.launchpad.net/ubuntu/+source/nova"
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/aodh"
     },
     {
-      "name": "glance",
+      "name": "barbican",
       "forge": "launchpad",
-      "url": "https://git.launchpad.net/ubuntu/+source/glance"
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/barbican"
+    },
+    {
+      "name": "ceilometer",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/ceilometer"
     },
     {
       "name": "cinder",
       "forge": "launchpad",
-      "url": "https://git.launchpad.net/ubuntu/+source/cinder"
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/cinder"
+    },
+    {
+      "name": "cloudkitty",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/cloudkitty"
+    },
+    {
+      "name": "designate",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/designate"
+    },
+    {
+      "name": "designate-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/designate-dashboard"
+    },
+    {
+      "name": "git-review",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/git-review"
+    },
+    {
+      "name": "glance",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/glance"
+    },
+    {
+      "name": "gnocchi",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/gnocchi"
+    },
+    {
+      "name": "heat",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/heat"
+    },
+    {
+      "name": "heat-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/heat-dashboard"
+    },
+    {
+      "name": "horizon",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/horizon"
+    },
+    {
+      "name": "ironic",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/ironic"
+    },
+    {
+      "name": "ironic-inspector",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/ironic-inspector"
+    },
+    {
+      "name": "ironic-ui",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/ironic-ui"
+    },
+    {
+      "name": "keystone",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/keystone"
+    },
+    {
+      "name": "magnum",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/magnum"
+    },
+    {
+      "name": "magnum-capi-helm",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/magnum-capi-helm"
+    },
+    {
+      "name": "magnum-ui",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/magnum-ui"
+    },
+    {
+      "name": "manila",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/manila"
+    },
+    {
+      "name": "manila-ui",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/manila-ui"
+    },
+    {
+      "name": "masakari",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/masakari"
+    },
+    {
+      "name": "masakari-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/masakari-dashboard"
+    },
+    {
+      "name": "masakari-monitors",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/masakari-monitors"
+    },
+    {
+      "name": "mistral",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/mistral"
+    },
+    {
+      "name": "mistral-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/mistral-dashboard"
+    },
+    {
+      "name": "murano",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/murano"
+    },
+    {
+      "name": "murano-agent",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/murano-agent"
+    },
+    {
+      "name": "murano-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/murano-dashboard"
+    },
+    {
+      "name": "networking-arista",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-arista"
+    },
+    {
+      "name": "networking-bagpipe",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-bagpipe"
+    },
+    {
+      "name": "networking-baremetal",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-baremetal"
+    },
+    {
+      "name": "networking-bgpvpn",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-bgpvpn"
+    },
+    {
+      "name": "networking-hyperv",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-hyperv"
+    },
+    {
+      "name": "networking-l2gw",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-l2gw"
+    },
+    {
+      "name": "networking-mlnx",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-mlnx"
+    },
+    {
+      "name": "networking-odl",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-odl"
+    },
+    {
+      "name": "networking-ovn",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-ovn"
+    },
+    {
+      "name": "networking-sfc",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/networking-sfc"
     },
     {
       "name": "neutron",
       "forge": "launchpad",
-      "url": "https://git.launchpad.net/ubuntu/+source/neutron"
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron"
+    },
+    {
+      "name": "neutron-dynamic-routing",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-dynamic-routing"
+    },
+    {
+      "name": "neutron-fwaas",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-fwaas"
+    },
+    {
+      "name": "neutron-fwaas-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-fwaas-dashboard"
+    },
+    {
+      "name": "neutron-lbaas",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-lbaas"
+    },
+    {
+      "name": "neutron-lbaas-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-lbaas-dashboard"
+    },
+    {
+      "name": "neutron-taas",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-taas"
+    },
+    {
+      "name": "neutron-vpnaas",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-vpnaas"
+    },
+    {
+      "name": "neutron-vpnaas-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/neutron-vpnaas-dashboard"
+    },
+    {
+      "name": "nova",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/nova"
+    },
+    {
+      "name": "octavia",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/octavia"
+    },
+    {
+      "name": "octavia-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/octavia-dashboard"
+    },
+    {
+      "name": "openstack-pkg-tools",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/openstack-pkg-tools"
+    },
+    {
+      "name": "openstack-release",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/openstack-release"
+    },
+    {
+      "name": "openstack-trove",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/openstack-trove"
+    },
+    {
+      "name": "ovn-bgp-agent",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/ovn-bgp-agent"
+    },
+    {
+      "name": "ovn-octavia-provider",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/ovn-octavia-provider"
+    },
+    {
+      "name": "panko",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/panko"
+    },
+    {
+      "name": "pg8000",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/pg8000"
+    },
+    {
+      "name": "placement",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/placement"
+    },
+    {
+      "name": "pydeb-cookiecutter",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/pydeb-cookiecutter"
+    },
+    {
+      "name": "python-aodhclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-aodhclient"
+    },
+    {
+      "name": "python-automaton",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-automaton"
+    },
+    {
+      "name": "python-barbicanclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-barbicanclient"
+    },
+    {
+      "name": "python-binary-memcached",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-binary-memcached"
+    },
+    {
+      "name": "python-blazarclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-blazarclient"
+    },
+    {
+      "name": "python-castellan",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-castellan"
+    },
+    {
+      "name": "python-ceilometerclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ceilometerclient"
+    },
+    {
+      "name": "python-ceilometermiddleware",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ceilometermiddleware"
+    },
+    {
+      "name": "python-cinderclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-cinderclient"
+    },
+    {
+      "name": "python-cliff",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-cliff"
+    },
+    {
+      "name": "python-designateclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-designateclient"
+    },
+    {
+      "name": "python-diskimage-builder",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-diskimage-builder"
+    },
+    {
+      "name": "python-dracclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-dracclient"
+    },
+    {
+      "name": "python-glance-store",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-glance-store"
+    },
+    {
+      "name": "python-glanceclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-glanceclient"
+    },
+    {
+      "name": "python-gnocchiclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-gnocchiclient"
+    },
+    {
+      "name": "python-heatclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-heatclient"
+    },
+    {
+      "name": "python-ibmcclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ibmcclient"
+    },
+    {
+      "name": "python-ironic-inspector-client",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ironic-inspector-client"
+    },
+    {
+      "name": "python-ironic-lib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ironic-lib"
+    },
+    {
+      "name": "python-ironicclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ironicclient"
+    },
+    {
+      "name": "python-keystoneauth1",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-keystoneauth1"
+    },
+    {
+      "name": "python-keystoneclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-keystoneclient"
+    },
+    {
+      "name": "python-keystonemiddleware",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-keystonemiddleware"
+    },
+    {
+      "name": "python-libjuju",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-libjuju"
+    },
+    {
+      "name": "python-magnumclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-magnumclient"
+    },
+    {
+      "name": "python-manilaclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-manilaclient"
+    },
+    {
+      "name": "python-masakariclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-masakariclient"
+    },
+    {
+      "name": "python-mistral-lib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-mistral-lib"
+    },
+    {
+      "name": "python-mistralclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-mistralclient"
+    },
+    {
+      "name": "python-monasca-statsd",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-monasca-statsd"
+    },
+    {
+      "name": "python-monascaclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-monascaclient"
+    },
+    {
+      "name": "python-muranoclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-muranoclient"
+    },
+    {
+      "name": "python-neutron-lib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-neutron-lib"
+    },
+    {
+      "name": "python-neutronclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-neutronclient"
+    },
+    {
+      "name": "python-novaclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-novaclient"
+    },
+    {
+      "name": "python-observabilityclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-observabilityclient"
+    },
+    {
+      "name": "python-octavia-lib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-octavia-lib"
+    },
+    {
+      "name": "python-octaviaclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-octaviaclient"
+    },
+    {
+      "name": "python-openstackclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-openstackclient"
+    },
+    {
+      "name": "python-openstackdocstheme",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-openstackdocstheme"
+    },
+    {
+      "name": "python-openstacksdk",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-openstacksdk"
+    },
+    {
+      "name": "python-os-api-ref",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-api-ref"
+    },
+    {
+      "name": "python-os-brick",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-brick"
+    },
+    {
+      "name": "python-os-client-config",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-client-config"
+    },
+    {
+      "name": "python-os-ken",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-ken"
+    },
+    {
+      "name": "python-os-resource-classes",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-resource-classes"
+    },
+    {
+      "name": "python-os-service-types",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-service-types"
+    },
+    {
+      "name": "python-os-testr",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-testr"
+    },
+    {
+      "name": "python-os-traits",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-traits"
+    },
+    {
+      "name": "python-os-vif",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-vif"
+    },
+    {
+      "name": "python-os-win",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-win"
+    },
+    {
+      "name": "python-os-xenapi",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-os-xenapi"
+    },
+    {
+      "name": "python-osc-lib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-osc-lib"
+    },
+    {
+      "name": "python-osc-placement",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-osc-placement"
+    },
+    {
+      "name": "python-oslo.cache",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.cache"
+    },
+    {
+      "name": "python-oslo.concurrency",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.concurrency"
+    },
+    {
+      "name": "python-oslo.config",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.config"
+    },
+    {
+      "name": "python-oslo.context",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.context"
+    },
+    {
+      "name": "python-oslo.db",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.db"
+    },
+    {
+      "name": "python-oslo.i18n",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.i18n"
+    },
+    {
+      "name": "python-oslo.limit",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.limit"
+    },
+    {
+      "name": "python-oslo.log",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.log"
+    },
+    {
+      "name": "python-oslo.messaging",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.messaging"
+    },
+    {
+      "name": "python-oslo.metrics",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.metrics"
+    },
+    {
+      "name": "python-oslo.middleware",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.middleware"
+    },
+    {
+      "name": "python-oslo.policy",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.policy"
+    },
+    {
+      "name": "python-oslo.privsep",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.privsep"
+    },
+    {
+      "name": "python-oslo.reports",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.reports"
+    },
+    {
+      "name": "python-oslo.rootwrap",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.rootwrap"
+    },
+    {
+      "name": "python-oslo.serialization",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.serialization"
+    },
+    {
+      "name": "python-oslo.service",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.service"
+    },
+    {
+      "name": "python-oslo.upgradecheck",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.upgradecheck"
+    },
+    {
+      "name": "python-oslo.utils",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.utils"
+    },
+    {
+      "name": "python-oslo.versionedobjects",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.versionedobjects"
+    },
+    {
+      "name": "python-oslo.vmware",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslo.vmware"
+    },
+    {
+      "name": "python-oslotest",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-oslotest"
+    },
+    {
+      "name": "python-osprofiler",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-osprofiler"
+    },
+    {
+      "name": "python-ovsdbapp",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-ovsdbapp"
+    },
+    {
+      "name": "python-pankoclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-pankoclient"
+    },
+    {
+      "name": "python-pbr",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-pbr"
+    },
+    {
+      "name": "python-proliantutils",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-proliantutils"
+    },
+    {
+      "name": "python-purestorage",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-purestorage"
+    },
+    {
+      "name": "python-pyasyncore",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-pyasyncore"
+    },
+    {
+      "name": "python-pycdlib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-pycdlib"
+    },
+    {
+      "name": "python-qinlingclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-qinlingclient"
+    },
+    {
+      "name": "python-saharaclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-saharaclient"
+    },
+    {
+      "name": "python-scciclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-scciclient"
+    },
+    {
+      "name": "python-searchlightclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-searchlightclient"
+    },
+    {
+      "name": "python-senlinclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-senlinclient"
+    },
+    {
+      "name": "python-sushy",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-sushy"
+    },
+    {
+      "name": "python-sushy-oem-idrac",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-sushy-oem-idrac"
+    },
+    {
+      "name": "python-swiftclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-swiftclient"
+    },
+    {
+      "name": "python-tackerclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-tackerclient"
+    },
+    {
+      "name": "python-taskflow",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-taskflow"
+    },
+    {
+      "name": "python-tooz",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-tooz"
+    },
+    {
+      "name": "python-troveclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-troveclient"
+    },
+    {
+      "name": "python-vitrageclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-vitrageclient"
+    },
+    {
+      "name": "python-vmware-nsxlib",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-vmware-nsxlib"
+    },
+    {
+      "name": "python-watcherclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-watcherclient"
+    },
+    {
+      "name": "python-xclarityclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-xclarityclient"
+    },
+    {
+      "name": "python-zaqarclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-zaqarclient"
+    },
+    {
+      "name": "python-zunclient",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/python-zunclient"
+    },
+    {
+      "name": "rally",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/rally"
+    },
+    {
+      "name": "sahara",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/sahara"
+    },
+    {
+      "name": "sahara-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/sahara-dashboard"
+    },
+    {
+      "name": "sahara-plugin-spark",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/sahara-plugin-spark"
+    },
+    {
+      "name": "sahara-plugin-vanilla",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/sahara-plugin-vanilla"
+    },
+    {
+      "name": "senlin",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/senlin"
+    },
+    {
+      "name": "sqlalchemy",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/sqlalchemy"
+    },
+    {
+      "name": "stevedore",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/stevedore"
+    },
+    {
+      "name": "swift",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/swift"
+    },
+    {
+      "name": "trove-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/trove-dashboard"
+    },
+    {
+      "name": "ubuntu-openstack-metadata",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/+git/ubuntu-openstack-metadata"
+    },
+    {
+      "name": "virtualbmc",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/virtualbmc"
+    },
+    {
+      "name": "vitrage",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/vitrage"
+    },
+    {
+      "name": "vmware-nsx",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/vmware-nsx"
+    },
+    {
+      "name": "watcher",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/watcher"
+    },
+    {
+      "name": "watcher-dashboard",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/watcher-dashboard"
+    },
+    {
+      "name": "zaqar",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/zaqar"
+    },
+    {
+      "name": "zaqar-ui",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/zaqar-ui"
+    },
+    {
+      "name": "zvmcloudconnector",
+      "forge": "launchpad",
+      "url": "https://git.launchpad.net/~ubuntu-openstack-dev/ubuntu/+source/zvmcloudconnector"
     }
   ],
   "supporting_repos": []
