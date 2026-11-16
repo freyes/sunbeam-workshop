@@ -7,18 +7,18 @@
     },
     {
       "name": "snap-openstack",
-      "forge": "opendev",
-      "url": "https://opendev.org/openstack/snap-openstack"
+      "forge": "github",
+      "url": "https://github.com/canonical/snap-openstack"
     },
     {
       "name": "snap-cinder-volume",
-      "forge": "opendev",
-      "url": "https://opendev.org/openstack/snap-cinder-volume"
+      "forge": "github",
+      "url": "https://github.com/canonical/snap-cinder-volume"
     },
     {
       "name": "snap-openstack-hypervisor",
-      "forge": "opendev",
-      "url": "https://opendev.org/openstack/snap-openstack-hypervisor"
+      "forge": "github",
+      "url": "https://github.com/canonical/snap-openstack-hypervisor"
     },
     {
       "name": "ubuntu-openstack-rocks",
