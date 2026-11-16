@@ -6,6 +6,7 @@ import json
 import sys
 from pathlib import Path
 
+from .loader import DocError
 from .vars import VarsError, build_vars, find_root
 
 
@@ -29,6 +30,9 @@ def main(argv: list[str] | None = None) -> int:
         except VarsError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return exc.exit_code
+        except DocError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
         json.dump(doc, sys.stdout, indent=2, sort_keys=True)
         sys.stdout.write("\n")
         return 0

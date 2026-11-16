@@ -1,6 +1,9 @@
 # Rendered workshop instances (tracked sources: .workshop/*/sdk.yaml, hooks)
 .workshop/*.yaml
 
+# User-owned in-project SDKs (never committed)
+.workshop/*-user-tools/
+
 # Runtime state and credentials
 .state/
 .openchamber-password
@@ -8,6 +11,7 @@
 # Per-user configuration
 config/local.json
 config/*/config.json
+config/local/
 
 # Local tooling and build artifacts
 scripts/.venv/
