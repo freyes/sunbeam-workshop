@@ -45,6 +45,15 @@ for tool in charmcraft snapcraft rockcraft juju; do
     fi
 done
 
+# just (apt, from setup-base's baseline): the repo's command list must run
+# inside the workshop, with guarded recipes refusing via assert-host rather
+# than a bare command-not-found.
+if ! command -v just >/dev/null 2>&1; then
+    workshopctl set-health --code=missing-just error \
+        "just is not on PATH; setup-base installs it from the Ubuntu archive"
+    exit 1
+fi
+
 # uv-managed CPython 3.10/3.12 for the sunbeam tox envs (draft D-18).
 for py in 3.10 3.12; do
     if ! sudo -u "$workshop_user" bash -lc "uv python find $py" >/dev/null 2>&1; then
