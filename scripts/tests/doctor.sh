@@ -21,7 +21,18 @@ fail() {
 }
 
 # Coreutils the doctor legitimately needs; everything else comes from stubs.
-SAFE_PATH="/usr/bin:/bin"
+# The allowlist is a per-suite dir of symlinks (under WORK, trap-cleaned)
+# instead of /usr/bin:/bin because host images ship extra tools into those
+# dirs (e.g. yq on GitHub runners), which leaked into scenarios that rely
+# on a tool being absent and made them pass for the wrong reason.
+SAFE_BIN="${WORK}/safe-bin"
+mkdir -p "${SAFE_BIN}"
+for cmd in timeout awk sort head uname nproc df tail tr; do
+    ln -s "$(command -v "${cmd}")" "${SAFE_BIN}/${cmd}"
+done
+# run_doctor invokes bash explicitly; env resolves it against the new PATH.
+ln -s "$(command -v bash)" "${SAFE_BIN}/bash"
+SAFE_PATH="${SAFE_BIN}"
 
 LAST_OUT=""
 LAST_RC=0
