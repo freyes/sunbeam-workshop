@@ -5,6 +5,8 @@
 # stack Makefile targets in the same order. Every step below calls the
 # stack's own Makefile target - no custom commands. pa11y (WCAG 2.2 AA) is
 # local-only by stack design and deliberately NOT run here (docs/README.rst).
+# The battery also renders and validates the reno release notes, so the
+# trigger paths cover the note fragments and the reno config too.
 name: docs
 
 on:
@@ -12,10 +14,14 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yaml'
+      - 'reno.yaml'
+      - 'releasenotes/**'
   pull_request:
     paths:
       - 'docs/**'
       - '.github/workflows/docs.yaml'
+      - 'reno.yaml'
+      - 'releasenotes/**'
 
 permissions:
   contents: read

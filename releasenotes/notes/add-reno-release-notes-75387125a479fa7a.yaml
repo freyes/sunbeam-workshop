@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Release notes are now managed in the repository with `reno
+    <https://docs.openstack.org/reno/latest/>`_. Every user-visible change
+    ships a note fragment created with ``just note "<slug>"`` and committed
+    next to the change it describes. The accumulated notes are validated by
+    the strict docs build, rendered into the docs site's "Release notes"
+    page, and printable as RST with ``just notes`` for release
+    announcements.

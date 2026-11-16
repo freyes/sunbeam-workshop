@@ -94,6 +94,10 @@ docs/                  The sphinx-stack docs site (D-16/D-17): reST pages in
                        the four Diataxis quadrants (tutorial/, how-to/,
                        explanation/, reference/) plus dev-vm.rst (sidecar VM).
                        Build and check only - never published.
+releasenotes/          reno release-note fragments: one YAML per change
+                       (created by `just note`), validated and rendered into
+                       the docs site by the reno.sphinxext extension. Repo-level
+                       reno config lives in reno.yaml (repo root).
 skills/                opencode-format skills for agents working IN THIS REPO
                        (see Core Engineering Practices).
 .github/workflows/     lint.yaml, test.yaml, docs.yaml, and self-approve.yaml
@@ -157,6 +161,8 @@ side, and the dangerous ones only work where they must.
 | `just lint` | Local twin of the CI lint workflow: shellcheck, hook gate, just-recipe gate, actionlint, config/template validation | - |
 | `just test` | Every shell test suite (`scripts/tests/run.sh`; suites discovered live). The pytest unit tests are the separate `python-tests` CI job; locally: `cd scripts && uv run --frozen pytest -q` | - |
 | `just docs-build` / `just docs-serve` / `just docs-check` | sphinx-stack docs targets: strict build, local serve, full check battery (D-16/D-17) | - |
+| `just note "<slug>"` | Create a reno release-note fragment `releasenotes/notes/<slug>-<uid>.yaml` for the current change (docs venv is bootstrapped on demand) | - |
+| `just notes` | Print the accumulated release notes as RST (reno report), e.g. for release announcements | - |
 
 ### What you may and may not mutate
 
@@ -350,3 +356,5 @@ activity.
 | `just docs-build` | Build the docs site (strict: warnings are errors) |
 | `just docs-serve` | Build and serve the docs site locally |
 | `just docs-check` | Full docs check battery (build, spelling, links, style) |
+| `just note "<slug>"` | Create a reno release-note fragment for the current change |
+| `just notes` | Print the accumulated release notes as RST (reno report) |

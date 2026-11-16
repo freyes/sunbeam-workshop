@@ -16,3 +16,14 @@ docs-check:
     make -C docs linkcheck
     make -C docs woke
     make -C docs vale
+
+# Create a release note fragment for the current change (reno) and print
+# its path; edit the file and commit it with the change it describes
+note slug:
+    make -C docs install
+    docs/.venv/bin/reno new {{slug}}
+
+# Print the accumulated release notes as RST, e.g. for announcements
+notes:
+    make -C docs install
+    docs/.venv/bin/reno report
