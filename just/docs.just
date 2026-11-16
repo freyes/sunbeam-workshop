@@ -16,4 +16,3 @@ docs-check:
     make -C docs linkcheck
     make -C docs woke
     make -C docs vale
-    make -C docs lint-md

@@ -50,14 +50,14 @@ def source_candidates_for_url(url):
     clean_path = clean_path.rstrip("/")
 
     if not clean_path:
-        return {"index.md"}
+        return {"index.rst"}
 
     # A removed dirhtml URL can map back to either a page file or an
     # index file. Directory-level redirects are stored with a trailing
     # slash, so include that form too.
     return {
-        f"{clean_path}.md",
-        f"{clean_path}/index.md",
+        f"{clean_path}.rst",
+        f"{clean_path}/index.rst",
         f"{clean_path}/",
     }
 

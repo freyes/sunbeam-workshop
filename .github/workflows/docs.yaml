@@ -4,7 +4,7 @@
 # check battery over docs/. Local twin: `just docs-check` runs the same
 # stack Makefile targets in the same order. Every step below calls the
 # stack's own Makefile target - no custom commands. pa11y (WCAG 2.2 AA) is
-# local-only by stack design and deliberately NOT run here (docs/README.md).
+# local-only by stack design and deliberately NOT run here (docs/README.rst).
 name: docs
 
 on:
@@ -48,5 +48,3 @@ jobs:
         run: make -C docs woke
       - name: Style guide lint
         run: make -C docs vale
-      - name: Markdown lint
-        run: make -C docs lint-md

@@ -176,7 +176,6 @@ linkcheck_retries = 3
 # https://www.sphinx-doc.org/en/master/usage/extensions/index.html
 extensions = [
     "ulwazi",
-    "myst_parser",
     "sphinx_design",
     "sphinx_rerediraffe",
     "sphinxcontrib.jquery",
@@ -199,7 +198,7 @@ exclude_patterns = [
     ".venv*",
     "_dev",
     # Repo-facing readme, not a site page (kept out of the toctree on purpose)
-    "README.md",
+    "README.rst",
 ]
 
 # Adds custom CSS files, located remotely or in 'html_static_path'.

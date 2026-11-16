@@ -90,17 +90,17 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   tests/golden/          Pinned golden render baselines for the six matrix names.
   sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
                          config layer merge (config.py), repo manager (repos.py).
-docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
-                       four Diataxis quadrants (tutorial/, how-to/, explanation/,
-                       reference/) plus dev-vm.md (sidecar VM). Build and check
-                       only - never published.
+docs/                  The sphinx-stack docs site (D-16/D-17): reST pages in
+                       the four Diataxis quadrants (tutorial/, how-to/,
+                       explanation/, reference/) plus dev-vm.rst (sidecar VM).
+                       Build and check only - never published.
 skills/                opencode-format skills for agents working IN THIS REPO
                        (see Core Engineering Practices).
 .github/workflows/     lint.yaml, test.yaml, docs.yaml, and self-approve.yaml
                        (SHA-pinned actions; docs.yaml runs the sphinx-stack docs
                        check battery and triggers on docs/** and its own path;
                        pa11y stays local-only per the stack's design - see
-                       docs/README.md). self-approve.yaml uses no actions: it
+                       docs/README.rst). self-approve.yaml uses no actions: it
                        answers an owner `/approve` comment on an owner-authored
                        PR with a github-actions[bot] approving review, which
                        satisfies the required-approvals branch protection that

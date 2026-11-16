@@ -130,7 +130,7 @@ lxc exec "$VM_NAME" -- sh -c '
 
 # Restricted to the default project: the client needs instance lifecycle on
 # `default` and nothing more. The token is stored 0600 under .state/vm/ so the
-# user can redeem it from the workshop container (see docs/dev-vm.md);
+# user can redeem it from the workshop container (see docs/dev-vm.rst);
 # destroy.sh revokes the certificate server-side and removes this file.
 token="$(lxc exec "$VM_NAME" -- lxc config trust add --quiet --name=sunbeam-workshop \
     --restricted --projects default)"
@@ -157,4 +157,4 @@ chmod 0600 "$VM_FP_FILE"
 echo "✓ lxc remote material recorded (fingerprint: ${fingerprint:0:16}...)"
 echo "✓ VM $VM_NAME ready at $addr (saved to $VM_IP_FILE)"
 echo "  ssh:        just vm-shell   (dev@$addr, key $VM_KEY)"
-echo "  lxc remote: see docs/dev-vm.md - token in $VM_TOKEN_FILE (expires 1H unredeemed)"
+echo "  lxc remote: see docs/dev-vm.rst - token in $VM_TOKEN_FILE (expires 1H unredeemed)"
