@@ -25,7 +25,7 @@ bypasses the guard.
 | --- | --- | --- |
 | `just doctor [name]` | Read-only host prerequisite checks. With `sunbeam`, additionally reports the sidecar-VM capacity floor (8 cores, 16 GiB RAM, 100 GiB disk) as warnings. | read-only |
 | `just secret-setup [name]` | Store the GitHub token in the host keyring, log in the host `gh`, and - with a name - wire the instance's gh-cli secret plug. | `assert-host` |
-| `just repos [profile]` | Clone or update the per-profile repository checkouts under `/project/git` (GitHub, opendev/Gerrit, Launchpad). | `assert-host` |
+| `just repos [profile]` | Clone or update the per-profile repository checkouts under `git/` of the repo checkout (`/project/git` inside the workshop container; GitHub, opendev/Gerrit, Launchpad). | `assert-host` |
 
 ## Sidecar VM (sunbeam profile)
 

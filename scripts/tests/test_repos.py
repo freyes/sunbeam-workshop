@@ -397,6 +397,50 @@ def test_apply_unknown_forge_exits_nonzero(
     assert not (root / ".state" / "repos-sunbeam.json").exists()
 
 
+# --- apply: git-root resolution -------------------------------------------------
+
+
+def test_git_root_defaults_to_checkout_git_dir(
+    root: Path, shims: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bare, _ = make_remote(root, "keystone")
+    write_repo_config(
+        root, "packaging", core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}]
+    )
+    monkeypatch.delenv("SUNBEAM_WORKSHOP_GIT_ROOT")
+    assert main(["repos", "apply", "packaging"]) == 0
+    clone = root / "git" / "keystone"
+    assert (clone / ".git").is_dir()
+
+
+def test_git_root_resolution_order(
+    root: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("SUNBEAM_WORKSHOP_GIT_ROOT")
+    assert repos.resolve_git_root(None, root) == root / "git"
+    monkeypatch.setenv("SUNBEAM_WORKSHOP_GIT_ROOT", str(root / "custom"))
+    assert repos.resolve_git_root(None, root) == root / "custom"
+    assert repos.resolve_git_root(str(root / "flag"), root) == root / "flag"
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root bypasses permission bits")
+def test_apply_unwritable_git_root_is_a_structured_error(
+    root: Path, shims: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bare, _ = make_remote(root, "keystone")
+    write_repo_config(
+        root, "packaging", core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}]
+    )
+    locked = root / "locked"
+    locked.mkdir(mode=0o500)
+    monkeypatch.setenv("SUNBEAM_WORKSHOP_GIT_ROOT", str(locked / "git"))
+    assert main(["repos", "apply", "packaging"]) == 1
+    summary = read_summary(capsys)
+    entry = summary["repos"][0]
+    assert entry["status"] == "error"
+    assert "os error:" in entry["detail"]
+
+
 # --- apply: invocation shapes ----------------------------------------------------
 
 
