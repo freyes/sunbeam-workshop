@@ -1,0 +1,37 @@
+# Copyright 2026 Canonical Ltd. All rights reserved.
+#
+# Self-approval gate for owner pull requests. Branch protection on main
+# requires one approving review, and GitHub never lets a PR author approve
+# their own PR - so for solo work that requirement can never go green.
+# This workflow closes the gap: when the repository owner comments
+# `/approve` on their own PR, github-actions[bot] leaves the approving
+# review, which satisfies the required-approvals rule and unblocks the
+# merge. Nothing else is approved: comments by anyone but the owner, on
+# plain issues, or on PRs authored by someone else are all ignored.
+name: self-approve
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  approve:
+    name: approve
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.issue.user.login == github.repository_owner &&
+      github.event.comment.author_association == 'OWNER' &&
+      startsWith(github.event.comment.body, '/approve')
+    steps:
+      - name: Approve the pull request as github-actions[bot]
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: >-
+          gh pr review "$PR_NUMBER" --repo "$REPO" --approve
+          --body "Approved on behalf of the repository owner via the /approve comment."

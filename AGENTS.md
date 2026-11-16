@@ -90,10 +90,16 @@ docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
                        only - never published.
 skills/                opencode-format skills for agents working IN THIS REPO
                        (see Core Engineering Practices).
-.github/workflows/     lint.yaml, test.yaml, and docs.yaml (SHA-pinned actions;
-                       docs.yaml runs the sphinx-stack docs check battery and
-                       triggers on docs/** and its own path; pa11y stays
-                       local-only per the stack's design - see docs/README.md).
+.github/workflows/     lint.yaml, test.yaml, docs.yaml, and self-approve.yaml
+                       (SHA-pinned actions; docs.yaml runs the sphinx-stack docs
+                       check battery and triggers on docs/** and its own path;
+                       pa11y stays local-only per the stack's design - see
+                       docs/README.md). self-approve.yaml uses no actions: it
+                       answers an owner `/approve` comment on an owner-authored
+                       PR with a github-actions[bot] approving review, which
+                       satisfies the required-approvals branch protection that
+                       the owner could never satisfy directly (GitHub never
+                       lets a PR author approve their own PR).
 .state/                Runtime state (mode 0700, gitignored): merged vars docs
                        (<name>.vars.json, 0600), sidecar-VM ssh/trust
                        material, and repos-<name>.json. Written by setup/vm
