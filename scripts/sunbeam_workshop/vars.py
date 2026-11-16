@@ -14,13 +14,12 @@ Name rules and resolution (draft decision D-13):
   ``shadow_warning=True`` (D-13: "warns when both exist").
 
 The merged vars doc (D-14) contains: workshop_name, profile, suffix,
-shadow_warning, profile vars (``profiles/<profile>/vars.json``, tolerated
-as ``{}`` when absent), the merged config layers, and the user identity.
-JSON only - no YAML data source.
+shadow_warning, profile vars (``profiles/<profile>/vars.{json,yaml}``,
+tolerated as ``{}`` when absent), the merged config layers, and the user
+identity. Data docs are format-flexible (JSON or YAML) via loader.load_doc.
 """
 from __future__ import annotations
 
-import json
 import os
 import re
 from dataclasses import dataclass
@@ -28,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from .config import load_config
+from .loader import load_doc
 
 NAME_PATTERN = re.compile(r"^[a-z](?:-?[a-z0-9])*$")
 NAME_MAX_LENGTH = 40
@@ -123,14 +123,12 @@ def resolve_name(root: Path, name: str) -> Resolution:
 
 
 def load_profile_vars(root: Path, profile: str) -> dict[str, Any]:
-    """Profile vars from profiles/<profile>/vars.json; {} when absent."""
-    path = root / "profiles" / profile / "vars.json"
-    if not path.is_file():
+    """Profile vars from profiles/<profile>/vars.{json,yaml}; {} when absent."""
+    base = root / "profiles" / profile / "vars"
+    doc = load_doc(base, f"profile vars for profile {profile!r}")
+    if doc is None:
         return {}
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise VarsError(f"{path} must contain a JSON object")
-    return data
+    return doc.data
 
 
 def build_vars(root: Path, name: str, user: str | None = None) -> dict[str, Any]:

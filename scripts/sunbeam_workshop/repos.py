@@ -1,6 +1,6 @@
 """Per-profile multi-forge repository manager (plan todo 11; A-7, D-6).
 
-Repo sets are data, not code: ``config/repos/<profile>.json`` holds
+Repo sets are data, not code: ``config/repos/<profile>.{json,yaml}`` holds
 ``core_repos`` and ``supporting_repos`` lists of entries shaped
 ``{name, forge: github|opendev|launchpad, url, fork_of?}``.
 
@@ -34,6 +34,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+from .loader import DocError, load_doc
 from .vars import VarsError, build_vars, find_root
 
 VALID_FORGES = ("github", "opendev", "launchpad")
@@ -76,8 +77,8 @@ def _git(
     return _run(["git", "-C", str(dest), *args], timeout=timeout)
 
 
-def _validate_entry(profile: str, section: str, index: int, entry: Any) -> dict:
-    where = f"config/repos/{profile}.json: {section}[{index}]"
+def _validate_entry(path: Path, section: str, index: int, entry: Any) -> dict:
+    where = f"{path}: {section}[{index}]"
     if not isinstance(entry, dict):
         raise ReposError(f"{where} must be a JSON object")
     name = entry.get("name")
@@ -110,31 +111,41 @@ def _validate_entry(profile: str, section: str, index: int, entry: Any) -> dict:
 
 
 def load_repo_config(root: Path, profile: str) -> dict[str, Any]:
-    """Load and validate config/repos/<profile>.json (data, not code)."""
-    path = root / "config" / "repos" / f"{profile}.json"
-    if not path.is_file():
+    """Load and validate config/repos/<profile>.{json,yaml} (data, not code)."""
+    base = root / "config" / "repos" / profile
+    doc = load_doc(base, f"repo list for profile {profile!r}")
+    if doc is None:
         raise ReposError(
-            f"no repo config for profile {profile!r}: expected {path} "
+            f"no repo config for profile {profile!r}: expected {base}.json "
+            f"or {base}.yaml "
             f"(seed one from profiles/{profile}/vars.json core_repos)"
         )
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, dict):
-        raise ReposError(f"{path} must contain a JSON object")
+    data = doc.data
     for section in CONFIG_SECTIONS:
         entries = data.get(section, [])
         if not isinstance(entries, list):
-            raise ReposError(f"{path}: {section} must be a list")
+            raise ReposError(f"{doc.path}: {section} must be a list")
         for index, entry in enumerate(entries):
-            _validate_entry(profile, section, index, entry)
+            _validate_entry(doc.path, section, index, entry)
     return data
 
 
 def configured_profiles(root: Path) -> list[str]:
-    """Profiles that have a config/repos/<profile>.json file."""
+    """Profiles that have a config/repos/<profile>.{json,yaml} file.
+
+    Both ``*.json`` and ``*.yaml`` are discovered and stems are deduped:
+    the same stem in both formats is listed once here; load_doc raises the
+    coexistence DocError when that profile is actually loaded.
+    """
     repos_dir = root / "config" / "repos"
     if not repos_dir.is_dir():
         return []
-    return sorted(path.stem for path in repos_dir.glob("*.json"))
+    stems = {
+        path.stem
+        for pattern in ("*.json", "*.yaml")
+        for path in repos_dir.glob(pattern)
+    }
+    return sorted(stems)
 
 
 def _normalize_url(url: str) -> str:
@@ -395,7 +406,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         names = [args.name] if args.name else configured_profiles(root)
         if not names:
-            raise ReposError("no config/repos/*.json found; nothing to do")
+            raise ReposError(
+                "no config/repos/*.{json,yaml} found; nothing to do"
+            )
         exit_code = 0
         for name in names:
             if args.action == "list":
@@ -414,6 +427,9 @@ def main(argv: list[str] | None = None) -> int:
     except ReposError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
+    except DocError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":  # pragma: no cover
