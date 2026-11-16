@@ -11,7 +11,7 @@ render name:
 
 # Launch a rendered workshop instance
 launch name:
-    exec workshop launch "{{name}}"
+    exec workshop launch --verbose "{{name}}"
 
 # Open an interactive shell in a running workshop instance
 shell name:
