@@ -47,7 +47,10 @@ The merged layers feed the variables document that `just setup` persists to
 ## Repository lists: `config/repos/<profile>.json`
 
 `just repos <profile>` clones or updates the checkouts under `git/` of the repo
-checkout (`/project/git` inside the workshop container) from these lists. Each entry in `core_repos` or `supporting_repos` is an
+checkout (`/project/git` inside the workshop container) from these lists.
+`--filter <glob>` (repeatable, ORed) limits the run to matching repo names -
+e.g. `just repos packaging --filter 'neutron*'` clones only the repos whose
+name matches `neutron*`. Each entry in `core_repos` or `supporting_repos` is an
 object:
 
 ```json

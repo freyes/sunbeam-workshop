@@ -27,6 +27,7 @@ and written to ``.state/repos-<name>.json``.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 import re
@@ -320,7 +321,27 @@ def apply_entry(
         return result
 
 
-def list_doc(root: Path, name: str) -> dict[str, Any]:
+def filter_entries(
+    entries: list[dict], patterns: list[str] | None
+) -> list[dict]:
+    """Keep entries whose name matches ANY of the glob patterns.
+
+    Patterns are shell globs (``fnmatch``: ``neutron*``, ``python-oslo.*``,
+    ``nova``); matching is case-sensitive against the entry ``name``. An
+    empty pattern list keeps every entry.
+    """
+    if not patterns:
+        return list(entries)
+    return [
+        entry
+        for entry in entries
+        if any(fnmatch.fnmatchcase(entry["name"], pattern) for pattern in patterns)
+    ]
+
+
+def list_doc(
+    root: Path, name: str, filters: list[str] | None = None
+) -> dict[str, Any]:
     """Validated repo config for the workshop NAME as a JSON-able doc."""
     vars_doc = build_vars(root, name)
     profile = vars_doc["profile"]
@@ -328,23 +349,33 @@ def list_doc(root: Path, name: str) -> dict[str, Any]:
     return {
         "workshop": name,
         "profile": profile,
-        "core_repos": data.get("core_repos", []),
-        "supporting_repos": data.get("supporting_repos", []),
+        "core_repos": filter_entries(data.get("core_repos", []), filters),
+        "supporting_repos": filter_entries(
+            data.get("supporting_repos", []), filters
+        ),
     }
 
 
-def apply_profile(root: Path, name: str, git_root: Path) -> tuple[dict[str, Any], int]:
+def apply_profile(
+    root: Path,
+    name: str,
+    git_root: Path,
+    filters: list[str] | None = None,
+) -> tuple[dict[str, Any], int]:
     """Clone/update every repo for NAME; returns (summary, exit_code)."""
     vars_doc = build_vars(root, name)
     profile = vars_doc["profile"]
     data = load_repo_config(root, profile)
     github_handle = vars_doc["user"]["github_handle"]
     gerrit_user = vars_doc["config"].get("gerrit_username") or vars_doc["user"]["name"]
-    entries = [
-        entry
-        for section in CONFIG_SECTIONS
-        for entry in data.get(section, [])
-    ]
+    entries = filter_entries(
+        [
+            entry
+            for section in CONFIG_SECTIONS
+            for entry in data.get(section, [])
+        ],
+        filters,
+    )
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         results = list(
             pool.map(
@@ -364,6 +395,7 @@ def apply_profile(root: Path, name: str, git_root: Path) -> tuple[dict[str, Any]
         "workshop": name,
         "profile": profile,
         "git_root": str(git_root),
+        "filters": list(filters or []),
         "counts": counts,
         "repos": results,
     }
@@ -394,6 +426,17 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NAME",
         help="workshop name (default: every configured profile)",
     )
+    list_parser.add_argument(
+        "--filter",
+        dest="filters",
+        action="append",
+        default=None,
+        metavar="GLOB",
+        help=(
+            "only process repos whose name matches this shell glob "
+            "(e.g. 'neutron*'); repeatable, multiple patterns are ORed"
+        ),
+    )
     apply_parser = subparsers.add_parser(
         "apply", help="clone or fetch/ff-update the repos for NAME"
     )
@@ -410,6 +453,17 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="PATH",
         help=f"clone root (default: ${GIT_ROOT_ENV} or <repo>/{DEFAULT_GIT_DIR})",
     )
+    apply_parser.add_argument(
+        "--filter",
+        dest="filters",
+        action="append",
+        default=None,
+        metavar="GLOB",
+        help=(
+            "only clone/update repos whose name matches this shell glob "
+            "(e.g. 'neutron*'); repeatable, multiple patterns are ORed"
+        ),
+    )
     return parser
 
 
@@ -425,12 +479,18 @@ def main(argv: list[str] | None = None) -> int:
         exit_code = 0
         for name in names:
             if args.action == "list":
-                doc = list_doc(root, name)
+                doc = list_doc(root, name, args.filters)
             else:
                 doc, code = apply_profile(
-                    root, name, resolve_git_root(args.git_root, root)
+                    root, name, resolve_git_root(args.git_root, root), args.filters
                 )
                 exit_code = max(exit_code, code)
+                if args.filters and not doc["repos"]:
+                    print(
+                        f"warning: {name}: filter(s) "
+                        f"{' '.join(repr(p) for p in args.filters)} matched no repos",
+                        file=sys.stderr,
+                    )
             json.dump(doc, sys.stdout, indent=2, sort_keys=True)
             sys.stdout.write("\n")
         return exit_code

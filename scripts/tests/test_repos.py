@@ -166,6 +166,57 @@ def test_list_prints_config_entries(
     assert doc["supporting_repos"] == []
 
 
+def test_list_filter_keeps_matching_names_only(
+    root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    entries = [
+        {"name": name, "forge": "launchpad", "url": f"https://example.com/{name}"}
+        for name in ("neutron", "neutron-fwaas", "nova", "keystone")
+    ]
+    write_repo_config(root, "packaging", core=entries)
+    assert main(["repos", "list", "packaging", "--filter", "neutron*"]) == 0
+    doc = read_summary(capsys)
+    assert [e["name"] for e in doc["core_repos"]] == ["neutron", "neutron-fwaas"]
+
+
+def test_list_multiple_filters_are_ored(
+    root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    entries = [
+        {"name": name, "forge": "launchpad", "url": f"https://example.com/{name}"}
+        for name in ("neutron", "nova", "python-oslo.db", "keystone")
+    ]
+    write_repo_config(root, "packaging", core=entries)
+    assert (
+        main(
+            [
+                "repos",
+                "list",
+                "packaging",
+                "--filter",
+                "nova",
+                "--filter",
+                "python-oslo.*",
+            ]
+        )
+        == 0
+    )
+    doc = read_summary(capsys)
+    assert [e["name"] for e in doc["core_repos"]] == ["nova", "python-oslo.db"]
+
+
+def test_list_filter_matching_nothing_is_empty_but_clean(
+    root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    entries = [
+        {"name": "keystone", "forge": "launchpad", "url": "https://example.com/k"}
+    ]
+    write_repo_config(root, "packaging", core=entries)
+    assert main(["repos", "list", "packaging", "--filter", "neutron*"]) == 0
+    doc = read_summary(capsys)
+    assert doc["core_repos"] == []
+
+
 def test_list_unknown_forge_rejected(
     root: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -335,6 +386,60 @@ def test_apply_ff_updates_after_remote_advance(
     assert summary["repos"][0]["status"] == "updated"
     clone = root / "git" / "keystone"
     assert git("-C", str(clone), "rev-parse", "HEAD") == remote_head
+
+
+# --- apply: filter ------------------------------------------------------------
+
+
+def test_apply_filter_clones_only_matching_entries(
+    root: Path, shims: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    keystone_bare, _ = make_remote(root, "keystone")
+    neutron_bare, _ = make_remote(root, "neutron-fwaas")
+    nova_bare, _ = make_remote(root, "nova")
+    write_repo_config(
+        root,
+        "packaging",
+        core=[
+            {
+                "name": "keystone",
+                "forge": "launchpad",
+                "url": str(keystone_bare),
+            },
+            {
+                "name": "neutron-fwaas",
+                "forge": "launchpad",
+                "url": str(neutron_bare),
+            },
+            {"name": "nova", "forge": "launchpad", "url": str(nova_bare)},
+        ],
+    )
+    assert main(["repos", "apply", "packaging", "--filter", "neutron*"]) == 0
+    assert (root / "git" / "neutron-fwaas" / ".git").is_dir()
+    assert not (root / "git" / "keystone").exists()
+    assert not (root / "git" / "nova").exists()
+    summary = read_summary(capsys)
+    assert [r["name"] for r in summary["repos"]] == ["neutron-fwaas"]
+    assert summary["filters"] == ["neutron*"]
+    state = json.loads((root / ".state" / "repos-packaging.json").read_text())
+    assert [r["name"] for r in state["repos"]] == ["neutron-fwaas"]
+
+
+def test_apply_filter_matching_nothing_warns_and_clones_nothing(
+    root: Path, shims: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bare, _ = make_remote(root, "keystone")
+    write_repo_config(
+        root,
+        "packaging",
+        core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}],
+    )
+    assert main(["repos", "apply", "packaging", "--filter", "neutron*"]) == 0
+    assert not (root / "git" / "keystone").exists()
+    captured = capsys.readouterr()
+    summary = json.loads(captured.out)
+    assert summary["repos"] == []
+    assert "matched no repos" in captured.err
 
 
 # --- apply: safety rails ---------------------------------------------------------

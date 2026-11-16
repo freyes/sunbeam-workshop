@@ -150,7 +150,7 @@ side, and the dangerous ones only work where they must.
 | `just launch <name>` | Launch a rendered instance (`workshop launch` passthrough) | - |
 | `just shell <name>` | Interactive shell in a running instance | - |
 | `just stop <name>` / `just remove <name>` | Stop / remove an instance | - |
-| `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `git/` of the repo checkout - `/project/git` inside the container (github, opendev+Gerrit, launchpad) | `assert-host` |
+| `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `git/` of the repo checkout - `/project/git` inside the container (github, opendev+Gerrit, launchpad). Extra args pass through to the repo manager; `--filter <glob>` (repeatable, ORed) limits the run to matching repo names, e.g. `just repos packaging --filter 'neutron*'` | `assert-host` |
 | `just secret-setup` / `just secret-setup <name>` | Store the GitHub token in the host keyring, log in host `gh`, wire the instance's gh-cli secret plug | `assert-host` |
 | `just vm-create` / `just vm-destroy` | Sidecar VM lifecycle (sunbeam profile; destroy keeps `.state/vm/` unless `PURGE=1`) | `assert-host` |
 | `just vm-status` / `just vm-shell` | Sidecar VM state (read-only) / ssh shell | - |
