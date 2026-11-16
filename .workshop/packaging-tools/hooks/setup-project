@@ -24,18 +24,6 @@ set -euo pipefail
 # shellcheck source=scripts/hooks/lib-common.sh
 . /project/scripts/hooks/lib-common.sh
 
-# Provisioning failures are loud but do not abort the hook: check-health is
-# the authoritative gate and names the missing piece via workshopctl
-# set-health --code (ck8s-dev setup-project.base pattern - a swallowed
-# failure once left a "ready" workshop without its tooling).
-run_step() {
-    local label="$1"
-    shift
-    if ! "$@"; then
-        echo "ERROR: ${label} failed; check-health will report it" >&2
-    fi
-}
-
 # write_ppa_profile <vars-doc> - seed ~/.dput.d/profiles/ppa.json. The shape
 # mirrors dput-ng's stock ppa profile (/usr/share/dput-ng/profiles/ppa.json)
 # with the Launchpad username pre-seeded into the incoming path.
@@ -93,3 +81,8 @@ run_step "pin_forge_host_keys" pin_forge_host_keys
 if [ -n "$vars_doc" ]; then
     run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
 fi
+
+# User lifecycle fragments (config/local/hooks/{all,packaging,<hostname>}/
+# setup-project.d/*.sh) run fail-soft as the last step; check-health gates
+# its own fragment set fail-hard.
+run_step "user fragments" run_user_fragments setup-project packaging
