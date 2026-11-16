@@ -48,7 +48,9 @@ config/                Data, not code (IS-8).
                          hook fragments). May be created, never committed.
 profiles/              Profiles as data (D-13, D-14).
   _partials/             Shared jinja2 partials: system-secret, oauth-tunnel,
-                         sdks-chain, ssh-agent.
+                         sdks-chain (dumb emitter over the computed `sdks`
+                         list), ssh-agent, actions (top-level `actions:`
+                         block; emits zero bytes when the mapping is empty).
   <profile>/workshop.yaml.j2  The profile template, composed ONLY from partials.
   <profile>/vars.{json,yaml}  Profile vars (snaps pins, tox, pythons, k8s,
                          extra_sdks, repo seed).
@@ -204,8 +206,12 @@ Profiles are data; adding one never touches the render code (D-13/D-14).
 3. `.workshop/<name>-tools/` - the in-project SDK: `sdk.yaml`
    (`name: <name>-tools`, `base: ubuntu@26.04`) plus `hooks/` (`setup-base`,
    `setup-project`, `check-health`; see Invariant 2 and the `hook-authoring`
-   skill). The shared `sdks-chain` partial lists `project-<name>-tools` last
-   automatically from the `profile` var.
+    skill). The SDK chain is assembled in Python
+    (`scripts/sunbeam_workshop/chain.py`: base chain -> `extra_sdks` -> user
+    `sdks.add` -> `project-<name>-tools` last); the shared `sdks-chain`
+    partial is a dumb emitter over that computed `sdks` list, and the
+    `actions` partial (included last, after the connections include) emits
+    the top-level `actions:` block.
 4. `config/repos/<name>.json` - the repo list for `just repos <name>`
    (seed it from the `core_repos` in the new `vars.json`).
 5. Validate: `just render <name>`, then
