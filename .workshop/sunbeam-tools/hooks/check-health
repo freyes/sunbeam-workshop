@@ -8,6 +8,15 @@
 
 set -euo pipefail
 
+# Shared hook library, tracked at scripts/hooks/lib-common.sh in the repo and
+# mounted at /project inside the container. Sourced here for
+# run_user_fragments only: this hook runs as root, so the $HOME-based
+# provisioning helpers must never be called from it. The shellcheck source
+# directive is repo-root-relative so `shellcheck -x` from the repo root can
+# follow it.
+# shellcheck source=scripts/hooks/lib-common.sh
+. /project/scripts/hooks/lib-common.sh
+
 workshop_user="$(getent passwd 1000 | cut -d: -f1)"
 if [ -z "$workshop_user" ]; then
     workshopctl set-health --code=missing-workshop-user error \
@@ -58,6 +67,15 @@ fi
 if ! sudo -u "$workshop_user" git config --global user.name >/dev/null 2>&1; then
     workshopctl set-health --code=missing-git-identity error \
         "git user.name is not set for $workshop_user; setup-project applies it from /project/.state/<name>.vars.json"
+    exit 1
+fi
+
+# User lifecycle fragments (config/local/hooks/{all,sunbeam,<hostname>}/
+# check-health.d/*.sh) run fail-hard: the first failure's name becomes the
+# set-health code and the workshop never reaches Ready.
+if ! run_user_fragments check-health sunbeam; then
+    workshopctl set-health --code="user-fragment-${USER_FRAGMENT_FAILURES[0]}" error \
+        "user fragment failed: ${USER_FRAGMENT_FAILURES[*]}"
     exit 1
 fi
 

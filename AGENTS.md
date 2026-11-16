@@ -76,7 +76,7 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   pin-host-keys.sh       Pin ssh host keys for github.com, review.opendev.org,
                          git.launchpad.net.
   hooks/lib-common.sh    Shared bash library SOURCED by every setup-project
-                         hook; never duplicated.
+                         and check-health hook; never duplicated.
   vm/                    Sidecar VM lifecycle (create/destroy/shell/status,
                          cloud-init.yaml.j2, lib-vm.sh).
   ci/render-matrix.sh    The D-15 bounded render matrix (six enumerated names).
@@ -263,12 +263,22 @@ Repo rules on top of the contract:
   `check-health` under `.workshop/<profile>-tools/hooks/` as executable bash
   with a shell shebang (non-shell payloads such as `tox-requirements.txt`
   share the directory and are skipped by the shellcheck gate).
-- `setup-project` SOURCES `/project/scripts/hooks/lib-common.sh`; the shared
-  provisioning steps live there and are never duplicated into a hook.
+- `setup-project` and `check-health` SOURCE
+  `/project/scripts/hooks/lib-common.sh`; the shared provisioning steps live
+  there and are never duplicated into a hook. `check-health` runs as root
+  and sources it definitions-only: never call the `$HOME`-based helpers
+  from that root context.
 - Provisioning failures in `setup-project` are loud but non-fatal
   (`run_step`): `check-health` is the authoritative gate. Every failure path
   in `check-health` calls `workshopctl set-health --code=<reason> error`
   with a message and exits non-zero; the hook ends with `set-health okay`.
+- User lifecycle fragments under
+  `config/local/hooks/{all,<profile>,<instance>}/{setup-project,check-health}.d/*.sh`
+  are sourced by `run_user_fragments` (subshell-isolated, lexical order):
+  fail-soft as `setup-project`'s last step via `run_step`, fail-hard
+  immediately before `check-health`'s final `set-health okay`
+  (`--code=user-fragment-<first>`). `setup-base` and save/restore-state
+  have no fragment seam.
 
 ### 3. Rendered files are generated - edit templates, not outputs
 
