@@ -14,8 +14,10 @@ Per forge:
               from the vars doc: ``config.gerrit_username`` or the user name).
 * launchpad - https clone from the entry url.
 
-All clones live under ``/project/git/<repo>`` (A-7), overridable with
-``--git-root`` or ``SUNBEAM_WORKSHOP_GIT_ROOT`` (tests use local fixtures).
+All clones live under ``<checkout>/git/<repo>`` - the ``git/`` directory of
+the repo checkout, which is ``/project/git`` inside the workshop container
+(A-7) - overridable with ``--git-root`` or ``SUNBEAM_WORKSHOP_GIT_ROOT``
+(tests use local fixtures).
 Existing clones are fetched and fast-forwarded, never re-cloned; dirty
 clones are reported and left completely untouched (never reset). Cloning is
 https-only - ssh is for push via agent forwarding. Concurrency is a
@@ -43,7 +45,7 @@ MAX_WORKERS = 4
 CLONE_TIMEOUT = 900
 FETCH_TIMEOUT = 600
 OP_TIMEOUT = 60
-DEFAULT_GIT_ROOT = Path("/project/git")
+DEFAULT_GIT_DIR = "git"
 GIT_ROOT_ENV = "SUNBEAM_WORKSHOP_GIT_ROOT"
 
 # Repo directory names double as paths under the git root: keep them boring.
@@ -56,11 +58,19 @@ class ReposError(Exception):
     exit_code = 2
 
 
-def resolve_git_root(cli_value: str | None) -> Path:
-    """--git-root flag, then SUNBEAM_WORKSHOP_GIT_ROOT, then /project/git."""
+def resolve_git_root(cli_value: str | None, root: Path) -> Path:
+    """--git-root flag, then SUNBEAM_WORKSHOP_GIT_ROOT, then <root>/git.
+
+    The default is relative to the repo checkout, so clones land under
+    ``/project/git`` inside the workshop container and under
+    ``<checkout>/git`` on a host checkout.
+    """
     if cli_value:
         return Path(cli_value)
-    return Path(os.environ.get(GIT_ROOT_ENV, str(DEFAULT_GIT_ROOT)))
+    env_value = os.environ.get(GIT_ROOT_ENV)
+    if env_value:
+        return Path(env_value)
+    return root / DEFAULT_GIT_DIR
 
 
 def _run(
@@ -305,6 +315,9 @@ def apply_entry(
         cmd = " ".join(str(part) for part in exc.cmd) if exc.cmd else "subprocess"
         result.update(status="error", detail=f"timed out after {exc.timeout}s: {cmd}")
         return result
+    except OSError as exc:
+        result.update(status="error", detail=f"os error: {exc}")
+        return result
 
 
 def list_doc(root: Path, name: str) -> dict[str, Any]:
@@ -395,7 +408,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--git-root",
         default=None,
         metavar="PATH",
-        help=f"clone root (default: ${GIT_ROOT_ENV} or {DEFAULT_GIT_ROOT})",
+        help=f"clone root (default: ${GIT_ROOT_ENV} or <repo>/{DEFAULT_GIT_DIR})",
     )
     return parser
 
@@ -415,7 +428,7 @@ def main(argv: list[str] | None = None) -> int:
                 doc = list_doc(root, name)
             else:
                 doc, code = apply_profile(
-                    root, name, resolve_git_root(args.git_root)
+                    root, name, resolve_git_root(args.git_root, root)
                 )
                 exit_code = max(exit_code, code)
             json.dump(doc, sys.stdout, indent=2, sort_keys=True)

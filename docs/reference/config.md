@@ -46,8 +46,8 @@ The merged layers feed the variables document that `just setup` persists to
 
 ## Repository lists: `config/repos/<profile>.json`
 
-`just repos <profile>` clones or updates the checkouts under `/project/git`
-from these lists. Each entry in `core_repos` or `supporting_repos` is an
+`just repos <profile>` clones or updates the checkouts under `git/` of the repo
+checkout (`/project/git` inside the workshop container) from these lists. Each entry in `core_repos` or `supporting_repos` is an
 object:
 
 ```json
@@ -60,7 +60,7 @@ object:
 
 | Key | Required | Meaning |
 | --- | --- | --- |
-| `name` | yes | Directory name under `/project/git`. |
+| `name` | yes | Directory name under the clone root (`/project/git` inside the workshop container). |
 | `forge` | yes | One of `github`, `opendev`, `launchpad` - selects the clone behaviour below. |
 | `url` | yes | The clone URL. |
 | `fork_of` | no | `<owner>/<repo>` on GitHub; adds a `fork` remote (needs `github_handle`). |

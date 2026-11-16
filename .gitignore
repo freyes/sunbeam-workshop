@@ -4,6 +4,10 @@
 # User-owned in-project SDKs (never committed)
 .workshop/*-user-tools/
 
+# Working clones created by `just repos` (host checkouts; inside the
+# container the checkout root is /project)
+git/
+
 # Runtime state and credentials
 .state/
 .openchamber-password
