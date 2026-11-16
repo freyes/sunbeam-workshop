@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 
 from .loader import DocError
-from .vars import VarsError, build_vars, find_root
+from .uservars import UserVarsError
+from .vars import VarsError, build_vars_full, find_root
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -26,15 +27,26 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "vars":
         try:
-            doc = build_vars(find_root(Path.cwd()), args.name)
+            result = build_vars_full(find_root(Path.cwd()), args.name)
         except VarsError as exc:
             print(f"error: {exc}", file=sys.stderr)
             return exc.exit_code
-        except DocError as exc:
+        except (DocError, UserVarsError) as exc:
             print(f"error: {exc}", file=sys.stderr)
             return 2
-        json.dump(doc, sys.stdout, indent=2, sort_keys=True)
+        # stdout stays pure JSON (render.sh and setup.sh parse it); every
+        # diagnostic goes to stderr only (sequencing trap 5).
+        json.dump(result.doc, sys.stdout, indent=2, sort_keys=True)
         sys.stdout.write("\n")
+        for warning in result.warnings:
+            print(f"warning: {warning}", file=sys.stderr)
+        diff = result.chain_diff
+        print(
+            f"layers: {result.layers_applied} applied; "
+            f"sdks +{len(diff.added)} ~{len(diff.overridden)} "
+            f"-{len(diff.removed)}; actions +{result.actions_added}",
+            file=sys.stderr,
+        )
         return 0
     parser.error(f"unknown command {args.command!r}")  # pragma: no cover
     return 2  # pragma: no cover
