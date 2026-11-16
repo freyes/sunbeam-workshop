@@ -1,0 +1,31 @@
+# Example user vars layer - profile scope. Applies to every instance of
+# the sunbeam profile, suffixed instances (sunbeam-x, ...) included.
+#
+# This file is an EXAMPLE: config/example/ is never loaded. Copy it to
+# config/local/vars/profile/sunbeam.yaml and edit to make it real. Later
+# scopes win over earlier ones (all -> profile -> instance) for keys that
+# merge by name (sdks.set, actions); sdks.add concatenates and
+# sdks.remove unions.
+
+sdks:
+  set:
+    # Channel override on a store SDK already in the chain. Channel-only:
+    # setting anything else - or setting a channel on a project-*, try-*,
+    # or system SDK, where it is schema-inert - is a hard error. Setting
+    # gh-cli or openchamber is allowed but warns: both are load-bearing
+    # (the credential secret plug; the UI on :3000).
+    uv:
+      channel: latest/stable
+  # remove:
+  #   # Only profile extra_sdks entries and user-added SDKs are removable.
+  #   # The base chain (opencode, openchamber, gh-cli, uv) and
+  #   # project-sunbeam-tools are protected; unknown names are hard errors.
+  #   - orange-dev-tools
+
+actions:
+  # YAML block scalars keep the body readable; JSON layers must escape
+  # newlines instead. A user action with the same name as a tracked
+  # profile action wins, with an override warning at render time.
+  charm-tests: |
+    cd /project/git/sunbeam-charms
+    tox -e "${1:?usage: workshop run <name> charm-tests <tox-env>}"

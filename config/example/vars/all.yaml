@@ -1,0 +1,29 @@
+# Example user vars layer - "all" scope. Applies to every workshop
+# rendered from this checkout.
+#
+# This file is an EXAMPLE: config/example/ is never loaded. Copy it to
+# config/local/vars/all.yaml and edit to make it real. Each slot is
+# format-flexible: write all.json OR all.yaml, never both; .yml is never
+# read.
+#
+# Strict schema - unknown keys are hard errors, never ignored:
+#   sdks.add:    list of {name, channel?, plugs?, slots?}
+#   sdks.set:    {<sdk>: {channel: <channel>}}  - store SDKs only
+#   sdks.remove: [<sdk>, ...]  - profile extra_sdks + user-added only
+#   actions:     {<name>: <shell body>}  - names match ^[a-z](?:-?[a-z0-9])*$
+#
+# Snap pins are NOT here on purpose: pins stay in the tracked
+# profiles/<profile>/vars.json (mirrored by the pre-mount setup-base).
+
+sdks:
+  add:
+    # A store SDK added to every workshop you launch. The channel is
+    # optional; omit it to track the store default.
+    - name: orange-dev-tools
+      channel: latest/edge
+
+actions:
+  # Bodies run as the workshop user under bash -elo pipefail, with
+  # positional args from `workshop run <name> <action> [args...]`.
+  hello: |
+    echo "hello from $(hostname)"

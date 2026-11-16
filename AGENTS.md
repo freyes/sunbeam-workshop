@@ -44,8 +44,17 @@ config/                Data, not code (IS-8).
                          100GiB, ubuntu:26.04).
   local.json, <user>/config.json  Optional override layers (gitignored); deep-merge
                          order: config.json < local.json < <user>/config.json.
-  local/                 User-level gitignored customization tree (vars layers,
-                         hook fragments). May be created, never committed.
+                         A-12 amendment: per-instance scope exists for VARS
+                         layers only; identity config keeps NO per-instance layer.
+  local/                 User-level gitignored customization tree. May be created,
+                         never committed.
+    vars/{all,profile/<p>,instance/<name>}.{json,yaml}  User vars layers, applied
+                         in scope order (sdks.add/set/remove + actions; strict
+                         schema). One format per slot; .yml never read.
+    hooks/{all,<p>,<name>}/{setup-project,check-health}.d/*.sh  User lifecycle
+                         fragments (see Invariant 2).
+  example/vars/{all,profile/sunbeam}.yaml  Commented example user vars layers;
+                         never loaded, validated by scripts/tests/test_examples.py.
 profiles/              Profiles as data (D-13, D-14).
   _partials/             Shared jinja2 partials: system-secret, oauth-tunnel,
                          sdks-chain (dumb emitter over the computed `sdks`
@@ -86,12 +95,18 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   vm/                    Sidecar VM lifecycle (create/destroy/shell/status,
                          cloud-init.yaml.j2, lib-vm.sh).
   ci/render-matrix.sh    The D-15 bounded render matrix (six enumerated names).
+  ci/capture-golden.sh   Regenerate the golden render baseline (clean main tree
+                         only; kept out of tests/ so run.sh never runs it).
   ci/user-layers-fixture.sh  CI proof of the config/local/vars/ contract with
                          synthetic user layers (render + vars-doc assertions).
   qa/host/sdk-gate.sh    The D-19 host-side SDK verification gate.
   tests/                 Shell suites (discovered live by run.sh) + pytest.
+  tests/golden/          Pinned rendered yaml for the six matrix names; the
+                         golden.sh suite byte-compares renders against it.
   sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
                          config layer merge (config.py), repo manager (repos.py),
+                         format-flexible data-doc loader (loader.py), user vars
+                         layers (uservars.py), SDK chain assembly (chain.py),
                          `just layers` report (layers.py).
 docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
                        four Diataxis quadrants (tutorial/, how-to/, explanation/,
@@ -205,9 +220,10 @@ Profiles are data; adding one never touches the render code (D-13/D-14).
    `profiles/_partials/*.yaml.j2` into `profiles/<name>/partials/` as a git
    symlink (`../../_partials/<file>`); `scripts/render.sh` refuses to render
    when a link is missing or broken.
-2. `profiles/<name>/vars.json` - profile defaults: snap pins (`snaps`), tox
-   (`tox`), interpreter list (`pythons`), extra store SDKs (`extra_sdks`,
-   inserted between `uv` and the project SDK), and the `core_repos` seed.
+2. `profiles/<name>/vars.{json,yaml}` - profile defaults: snap pins (`snaps`),
+   tox (`tox`), interpreter list (`pythons`), extra store SDKs (`extra_sdks`,
+   inserted between `uv` and the project SDK), optional tracked `actions`,
+   and the `core_repos` seed. One format per slot; `.yml` never read.
 3. `.workshop/<name>-tools/` - the in-project SDK: `sdk.yaml`
    (`name: <name>-tools`, `base: ubuntu@26.04`) plus `hooks/` (`setup-base`,
    `setup-project`, `check-health`; see Invariant 2 and the `hook-authoring`
