@@ -9,7 +9,8 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
 # Baseline apt set shared by the in-project profile SDKs, plus git-review
-# for the Gerrit review workflow (draft D-6, IS-5).
+# for the Gerrit review workflow (draft D-6, IS-5). just carries the repo's
+# command list into the workshop: no SDK in the chain guarantees it.
 pkgs=(
   ca-certificates
   curl
@@ -17,6 +18,7 @@ pkgs=(
   git-review
   gnupg
   jq
+  just
   python3
   python3-yaml
   rsync
