@@ -157,7 +157,7 @@ case "$status" in
         ;;
     "")
         echo "✓ Launching the '$name' workshop environment..."
-        workshop launch "$name"
+        workshop launch --verbose "$name"
         ;;
     *)
         echo "✓ Workshop '$name' exists but is '$status'. Starting it..."
