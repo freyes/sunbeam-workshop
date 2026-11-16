@@ -22,12 +22,14 @@ from __future__ import annotations
 
 import os
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from .chain import ChainDiff, build_chain
 from .config import load_config
-from .loader import load_doc
+from .loader import LoadedDoc, load_doc
+from .uservars import discover, merge
 
 NAME_PATTERN = re.compile(r"^[a-z](?:-?[a-z0-9])*$")
 NAME_MAX_LENGTH = 40
@@ -122,10 +124,15 @@ def resolve_name(root: Path, name: str) -> Resolution:
     )
 
 
+def load_profile_vars_doc(root: Path, profile: str) -> LoadedDoc | None:
+    """The profile vars slot as a LoadedDoc; None when the slot is absent."""
+    base = root / "profiles" / profile / "vars"
+    return load_doc(base, f"profile vars for profile {profile!r}")
+
+
 def load_profile_vars(root: Path, profile: str) -> dict[str, Any]:
     """Profile vars from profiles/<profile>/vars.{json,yaml}; {} when absent."""
-    base = root / "profiles" / profile / "vars"
-    doc = load_doc(base, f"profile vars for profile {profile!r}")
+    doc = load_profile_vars_doc(root, profile)
     if doc is None:
         return {}
     return doc.data
@@ -149,6 +156,78 @@ def build_vars(root: Path, name: str, user: str | None = None) -> dict[str, Any]
             "email": config.get("email"),
         },
     }
+
+
+@dataclass(frozen=True)
+class VarsResult:
+    """build_vars_full result: the doc plus chain/layer telemetry."""
+
+    doc: dict[str, Any]
+    warnings: list[str] = field(default_factory=list)
+    layers_applied: int = 0
+    chain_diff: ChainDiff = field(default_factory=ChainDiff)
+    actions_added: int = 0
+
+
+def _layer_entry(kind: str, doc: LoadedDoc) -> dict[str, str]:
+    """One _layers provenance entry (assumption A3)."""
+    return {
+        "kind": kind,
+        "path": str(doc.path),
+        "format": doc.format,
+        "digest": doc.digest,
+    }
+
+
+def build_vars_full(root: Path, name: str, user: str | None = None) -> VarsResult:
+    """build_vars plus SDK chain assembly, actions merge, and provenance.
+
+    The doc gains three keys over the legacy build_vars doc:
+
+    * ``sdks``     - the assembled SDK chain (chain.build_chain).
+    * ``actions``  - profile_vars actions merged with user-layer actions by
+                     name (user wins, one warning per override).
+    * ``_layers``  - provenance of every vars-doc input: the tracked profile
+                     vars slot first when present, then each applied user
+                     layer, in scope order (assumption A3).
+
+    Warnings from the user-layer merge, the chain build, and action
+    overrides are collected in order. ``layers_applied`` counts the USER
+    layers applied (the tracked profile slot is not a user layer).
+    """
+    doc = build_vars(root, name, user)
+    resolution = resolve_name(root, name)
+    profile_vars: dict[str, Any] = doc["profile_vars"]
+    profile_doc = load_profile_vars_doc(root, resolution.profile)
+    user_docs = discover(root, resolution.profile, resolution.name)
+    user_vars, warnings = merge(user_docs)
+    sdks, chain_diff, chain_warnings = build_chain(
+        resolution.profile, profile_vars, user_vars
+    )
+    warnings = [*warnings, *chain_warnings]
+    actions: dict[str, Any] = dict(profile_vars.get("actions", {}))
+    actions_added = 0
+    for action_name, body in user_vars.actions.items():
+        if action_name in actions:
+            warnings.append(
+                f"action '{action_name}' from user layer overrides profile action"
+            )
+        else:
+            actions_added += 1
+        actions[action_name] = body
+    doc["sdks"] = sdks
+    doc["actions"] = actions
+    doc["_layers"] = [
+        *([_layer_entry("profile", profile_doc)] if profile_doc is not None else []),
+        *(_layer_entry("user", user_doc) for user_doc in user_docs),
+    ]
+    return VarsResult(
+        doc=doc,
+        warnings=warnings,
+        layers_applied=len(user_docs),
+        chain_diff=chain_diff,
+        actions_added=actions_added,
+    )
 
 
 def find_root(start: Path) -> Path:

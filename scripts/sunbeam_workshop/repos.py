@@ -35,7 +35,8 @@ from pathlib import Path
 from typing import Any
 
 from .loader import DocError, load_doc
-from .vars import VarsError, build_vars, find_root
+from .uservars import UserVarsError
+from .vars import VarsError, build_vars_full, find_root
 
 VALID_FORGES = ("github", "opendev", "launchpad")
 CONFIG_SECTIONS = ("core_repos", "supporting_repos")
@@ -307,9 +308,17 @@ def apply_entry(
         return result
 
 
+def _vars_doc(root: Path, name: str) -> dict[str, Any]:
+    """The build_vars_full doc; user-layer warnings echoed to stderr."""
+    result = build_vars_full(root, name)
+    for warning in result.warnings:
+        print(f"warning: {warning}", file=sys.stderr)
+    return result.doc
+
+
 def list_doc(root: Path, name: str) -> dict[str, Any]:
     """Validated repo config for the workshop NAME as a JSON-able doc."""
-    vars_doc = build_vars(root, name)
+    vars_doc = _vars_doc(root, name)
     profile = vars_doc["profile"]
     data = load_repo_config(root, profile)
     return {
@@ -322,7 +331,7 @@ def list_doc(root: Path, name: str) -> dict[str, Any]:
 
 def apply_profile(root: Path, name: str, git_root: Path) -> tuple[dict[str, Any], int]:
     """Clone/update every repo for NAME; returns (summary, exit_code)."""
-    vars_doc = build_vars(root, name)
+    vars_doc = _vars_doc(root, name)
     profile = vars_doc["profile"]
     data = load_repo_config(root, profile)
     github_handle = vars_doc["user"]["github_handle"]
@@ -427,7 +436,7 @@ def main(argv: list[str] | None = None) -> int:
     except ReposError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return exc.exit_code
-    except DocError as exc:
+    except (DocError, UserVarsError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 

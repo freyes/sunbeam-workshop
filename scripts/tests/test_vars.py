@@ -12,11 +12,13 @@ import pytest
 
 from sunbeam_workshop.__main__ import main
 from sunbeam_workshop.config import deep_merge, load_config
+from sunbeam_workshop.uservars import KILL_SWITCH_ENV
 from sunbeam_workshop.vars import (
     InstanceCollisionError,
     InvalidNameError,
     UnknownProfileError,
     build_vars,
+    build_vars_full,
     current_user,
     list_profiles,
     resolve_name,
@@ -257,3 +259,204 @@ def test_cli_collision_exit_5(
     monkeypatch.chdir(root)
     assert main(["vars", "packaging-foo"]) == 5
     assert "already exists" in capsys.readouterr().err
+
+
+# --- build_vars_full: chain, actions, provenance -------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _clear_user_layers_kill_switch(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The golden/equivalence suites export the kill-switch (assumption A1);
+    # a dev machine's environment must not skew these tests.
+    monkeypatch.delenv(KILL_SWITCH_ENV, raising=False)
+
+
+def write_user_layer(root: Path, slot: str, data: dict) -> Path:
+    """Write one config/local/vars/<slot>.json layer under the fixture root."""
+    path = root / "config" / "local" / "vars" / f"{slot}.json"
+    write_json(path, data)
+    return path
+
+
+def test_build_vars_full_doc_gains_sdks_actions_layers(root: Path) -> None:
+    write_json(
+        root / "profiles" / "packaging" / "vars.json",
+        {"extra_sdks": [{"name": "orange-dev-tools", "channel": "latest/edge"}]},
+    )
+    result = build_vars_full(root, "packaging-foo", user="alice")
+    doc = result.doc
+    assert [entry["name"] for entry in doc["sdks"]] == [
+        "opencode",
+        "openchamber",
+        "gh-cli",
+        "uv",
+        "orange-dev-tools",
+        "project-packaging-tools",
+    ]
+    assert doc["actions"] == {}
+    assert len(doc["_layers"]) == 1
+    (layer,) = doc["_layers"]
+    assert layer["kind"] == "profile"
+    assert layer["path"] == str(root / "profiles" / "packaging" / "vars.json")
+    assert layer["format"] == "json"
+    assert len(layer["digest"]) == 64
+    # No user layers: nothing applied, empty diff, no warnings.
+    assert result.layers_applied == 0
+    assert (result.chain_diff.added, result.chain_diff.removed) == ([], [])
+    assert result.chain_diff.overridden == []
+    assert result.actions_added == 0
+    assert result.warnings == []
+
+
+def test_build_vars_legacy_doc_gains_nothing(root: Path) -> None:
+    write_user_layer(root, "all", {"actions": {"a": "echo a"}})
+    doc = build_vars(root, "packaging-foo", user="alice")
+    assert "sdks" not in doc
+    assert "actions" not in doc
+    assert "_layers" not in doc
+    assert set(doc) == {
+        "workshop_name",
+        "profile",
+        "suffix",
+        "shadow_warning",
+        "profile_vars",
+        "config",
+        "user",
+    }
+
+
+def test_build_vars_full_layers_empty_when_no_slots(root: Path) -> None:
+    # No profile vars slot and no user layers: provenance is empty.
+    result = build_vars_full(root, "packaging-foo", user="alice")
+    assert result.doc["_layers"] == []
+    assert result.layers_applied == 0
+    assert result.doc["actions"] == {}
+
+
+def test_build_vars_full_layers_populated_in_scope_order(root: Path) -> None:
+    write_json(root / "profiles" / "packaging" / "vars.json", {"k": "v"})
+    all_path = write_user_layer(root, "all", {"actions": {"a": "echo all"}})
+    instance_path = write_user_layer(
+        root, "instance/packaging-foo", {"actions": {"b": "echo inst"}}
+    )
+    result = build_vars_full(root, "packaging-foo", user="alice")
+    layers = result.doc["_layers"]
+    assert [layer["kind"] for layer in layers] == ["profile", "user", "user"]
+    assert [layer["path"] for layer in layers] == [
+        str(root / "profiles" / "packaging" / "vars.json"),
+        str(all_path),
+        str(instance_path),
+    ]
+    assert result.layers_applied == 2
+    assert result.doc["actions"] == {"a": "echo all", "b": "echo inst"}
+    assert result.actions_added == 2
+
+
+def test_build_vars_full_actions_merge_and_override_warning(root: Path) -> None:
+    write_json(
+        root / "profiles" / "packaging" / "vars.json",
+        {"actions": {"build": "echo profile", "profile-only": "echo p"}},
+    )
+    write_user_layer(
+        root,
+        "instance/packaging-foo",
+        {"actions": {"build": "echo user", "test": "echo t"}},
+    )
+    result = build_vars_full(root, "packaging-foo", user="alice")
+    assert result.doc["actions"] == {
+        "build": "echo user",  # user layer wins over the profile action
+        "profile-only": "echo p",
+        "test": "echo t",
+    }
+    assert result.actions_added == 1  # only 'test' is new
+    assert result.warnings == [
+        "action 'build' from user layer overrides profile action"
+    ]
+
+
+def test_build_vars_full_chain_summary_fields(root: Path) -> None:
+    write_user_layer(
+        root,
+        "profile/packaging",
+        {
+            "sdks": {
+                "add": [{"name": "extra-sdk"}],
+                "set": {"uv": {"channel": "latest/edge"}},
+            },
+        },
+    )
+    result = build_vars_full(root, "packaging-foo", user="alice")
+    assert result.chain_diff.added == ["extra-sdk"]
+    assert result.chain_diff.overridden == ["uv"]
+    assert result.chain_diff.removed == []
+    assert result.layers_applied == 1
+    names = [entry["name"] for entry in result.doc["sdks"]]
+    assert names == [
+        "opencode",
+        "openchamber",
+        "gh-cli",
+        "uv",
+        "extra-sdk",
+        "project-packaging-tools",
+    ]
+
+
+def test_cli_vars_stdout_stays_pure_json_with_summary_on_stderr(
+    root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    write_user_layer(
+        root,
+        "profile/packaging",
+        {
+            "sdks": {
+                "add": [{"name": "extra-sdk"}],
+                "set": {"uv": {"channel": "latest/edge"}},
+            },
+            "actions": {"hello": "echo hi"},
+        },
+    )
+    monkeypatch.setenv("USER", "alice")
+    monkeypatch.chdir(root)
+    assert main(["vars", "packaging"]) == 0
+    captured = capsys.readouterr()
+    doc = json.loads(captured.out)  # stdout parses as pure JSON
+    assert doc["workshop_name"] == "packaging"
+    assert [entry["name"] for entry in doc["sdks"]][-2:] == [
+        "extra-sdk",
+        "project-packaging-tools",
+    ]
+    assert doc["actions"] == {"hello": "echo hi"}
+    assert (
+        "layers: 1 applied; sdks +1 ~1 -0; actions +1" in captured.err
+    )
+
+
+def test_cli_vars_no_layers_summary_is_zeroed(
+    root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("USER", "alice")
+    monkeypatch.chdir(root)
+    assert main(["vars", "packaging"]) == 0
+    captured = capsys.readouterr()
+    json.loads(captured.out)
+    assert (
+        "layers: 0 applied; sdks +0 ~0 -0; actions +0" in captured.err
+    )
+
+
+def test_cli_vars_warnings_on_stderr_not_stdout(
+    root: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    write_user_layer(
+        root,
+        "all",
+        {"sdks": {"set": {"gh-cli": {"channel": "latest/edge"}}}},
+    )
+    monkeypatch.setenv("USER", "alice")
+    monkeypatch.chdir(root)
+    assert main(["vars", "packaging"]) == 0
+    captured = capsys.readouterr()
+    json.loads(captured.out)  # stdout stays pure JSON
+    assert "warning: sdks.set.gh-cli" in captured.err
+    assert "load-bearing" in captured.err
+    assert "~1" in captured.err
