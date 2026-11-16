@@ -80,8 +80,10 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   vm/                    Sidecar VM lifecycle (create/destroy/shell/status,
                          cloud-init.yaml.j2, lib-vm.sh).
   ci/render-matrix.sh    The D-15 bounded render matrix (six enumerated names).
+  ci/capture-golden.sh   Regenerate the golden render baselines (clean main tree only).
   qa/host/sdk-gate.sh    The D-19 host-side SDK verification gate.
   tests/                 Shell suites (discovered live by run.sh) + pytest.
+  tests/golden/          Pinned golden render baselines for the six matrix names.
   sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
                          config layer merge (config.py), repo manager (repos.py).
 docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
