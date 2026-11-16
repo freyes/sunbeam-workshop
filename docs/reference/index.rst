@@ -3,8 +3,8 @@
 Reference
 =========
 
-Technical information: configuration schema, profiles, just targets, and the
-rendered-workshop contract.
+Technical information: configuration schema, profiles, just targets, the
+rendered-workshop contract, and the accumulated release notes.
 
 .. toctree::
    :maxdepth: 1
@@ -13,3 +13,4 @@ rendered-workshop contract.
    profiles
    just-targets
    rendered-yaml
+   release-notes

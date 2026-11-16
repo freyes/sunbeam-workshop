@@ -15,6 +15,10 @@ sphinx-roles~=1.0
 sphinx-terminal~=1.1
 sphinx-youtube-links~=0.1
 
+# Release notes (reno ships the sphinxext used by docs/reference/release-notes.rst
+# and the `reno` CLI used by the just note / just notes recipes)
+reno~=4.1
+
 # Other dependencies
 packaging~=26.3
 sphinxcontrib-svg2pdfconverter[CairoSVG]~=2.1

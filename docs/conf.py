@@ -190,6 +190,9 @@ extensions = [
     "sphinxcontrib.cairosvgconverter",
     "sphinx.ext.intersphinx",
     "sphinx_sitemap",
+    # Release notes: renders releasenotes/notes/ (managed with reno) into
+    # reference/release-notes
+    "reno.sphinxext",
 ]
 
 # Excludes files or directories from processing

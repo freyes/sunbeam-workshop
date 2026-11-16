@@ -33,6 +33,8 @@ QEMU
 Rockcraft
 readthedocs
 redeclare
+reno
+semver
 rst
 sitemapindex
 subproject

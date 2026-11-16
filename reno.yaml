@@ -1,0 +1,6 @@
+# reno (OpenStack release notes tool) repository configuration.
+# Discovered by both the reno CLI (run from the repo root) and the
+# reno.sphinxext directive in the docs site (which discovers the repo
+# root via git). Docs: https://docs.openstack.org/reno/latest/
+default_branch: main
+unreleased_version_title: unreleased
