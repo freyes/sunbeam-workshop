@@ -49,6 +49,9 @@ SDK has state that must survive `workshop refresh`.
 - Provisioning failures in `setup-project` are loud but non-fatal via the
   `run_step` wrapper: a swallowed failure once left a "ready" workshop
   without its tooling, so `check-health` is the authoritative gate.
+  `run_step` is defined ONCE in `lib-common.sh` (relocated from the
+  per-profile hooks, where it was defined identically three times) -
+  source it, never re-define it.
 - No secrets in hooks, ever. Identity comes from the persisted merged vars
   doc (`/project/.state/<name>.vars.json`, 0600, written by `setup.sh`);
   credentials come from the host keyring through the secret plug.
@@ -58,6 +61,55 @@ SDK has state that must survive `workshop refresh`.
   changes.
 - Vendored payloads (`tox-requirements.in/.txt`) sit beside the hooks
   NON-executable and shebang-less so the shellcheck gate skips them.
+
+## User lifecycle fragments (config/local/hooks/)
+
+`run_user_fragments <hook> <profile>` (lib-common) sources user fragments
+from `${SUNBEAM_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}` at
+two seams - there is no seam for `setup-base` (pre-mount: `/project` is
+physically not mounted) or save/restore-state:
+
+| Seam | Runs as | Where wired | Failure semantics |
+| --- | --- | --- | --- |
+| `setup-project.d/*.sh` | the `workshop` user | LAST step of `setup-project`, via `run_step "user fragments"` | **Fail-soft**: loud `ERROR`, hook continues; check-health gates |
+| `check-health.d/*.sh` | root | Immediately before the final `set-health okay` | **Fail-hard**: first failure becomes `workshopctl set-health --code=user-fragment-<name> error`, exit nonzero, Ready is blocked |
+
+Fragment contract:
+
+- Paths: `config/local/hooks/{all,<profile>,<instance>}/<hook>.d/*.sh`.
+  Scope order is `all` -> `<profile>` -> `<instance>` (`$(hostname)`, the
+  bare workshop name); lexical order within a dir; `*.sh` glob only;
+  missing/empty dirs are a silent no-op.
+- Each fragment is SOURCED inside its own `( )` subshell with every
+  lib-common helper in scope - a fragment's `set -e` death or `exit`
+  cannot kill the sourcing hook. Failed basenames collect in
+  `USER_FRAGMENT_FAILURES`; the function returns 1 when any failed.
+- Fragments MUST be idempotent: hooks re-run on launch, refresh, and
+  restore. `run_once <marker>` gates one-shot work (markers under
+  `${XDG_STATE_HOME:-$HOME/.local/state}/sunbeam-workshop/run-once/`).
+- check-health fragments run as ROOT: never call the `$HOME`-based
+  provisioning helpers (they act on the workshop user's environment);
+  use `as_workshop_user <cmd...>` (`sudo -u` the uid-1000 user) for
+  user-context probes, mirroring the repo's own
+  `sudo -u "$workshop_user" bash -lc ...` checks.
+- `config/local/` is gitignored user state - never commit fragments, and
+  never put credentials in them (Invariant 1).
+
+## User SDKs (.workshop/*-user-tools/)
+
+Pre-mount customization needs its own SDK, not a fragment. The
+`.workshop/<my-sdk>-user-tools/` pattern (gitignored, never committed) is
+an in-project SDK like the repo's own, wired in via a user layer
+`sdks.add` entry named `project-<my-sdk>-user-tools` (`project-<X>`
+resolves to `.workshop/<X>/` purely by path). Hard constraints:
+
+- `sdk.yaml`'s `name:` must equal the directory name;
+- hooks are REAL files, never symlinks - the Workshop snap copies symlinks
+  verbatim and they dangle inside the workshop;
+- the directory is owned by the invoking user;
+- the whole SDK dir is content-addressed at launch and refresh: any edit
+  is a new revision, so its hooks re-run. Health AND-aggregates across
+  SDKs, and SDK order in the rendered definition sets hook order.
 
 ## `set-health` semantics (check-health)
 

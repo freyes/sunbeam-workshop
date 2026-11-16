@@ -17,18 +17,6 @@ set -euo pipefail
 # when the SDK is staged under $SDK and when hooks run from /project.
 hook_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Provisioning failures are loud but do not abort the hook: check-health is
-# the authoritative gate and names the missing piece via workshopctl
-# set-health --code (ck8s-dev setup-project.base pattern - a swallowed
-# failure once left a "ready" workshop without its Python test tooling).
-run_step() {
-    local label="$1"
-    shift
-    if ! "$@"; then
-        echo "ERROR: ${label} failed; check-health will report it" >&2
-    fi
-}
-
 # Gerrit + git identity come from the merged vars doc persisted by
 # scripts/setup.sh at /project/.state/<name>.vars.json before launch. The
 # hook environment does not carry the workshop name, but the kernel hostname
@@ -73,3 +61,8 @@ run_step "pin_forge_host_keys" pin_forge_host_keys
 if [ -n "$vars_doc" ]; then
     run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
 fi
+
+# User lifecycle fragments (config/local/hooks/{all,charmed,<hostname>}/
+# setup-project.d/*.sh) run fail-soft as the last step; check-health gates
+# its own fragment set fail-hard.
+run_step "user fragments" run_user_fragments setup-project charmed

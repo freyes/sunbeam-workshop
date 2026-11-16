@@ -14,6 +14,10 @@
 # by design. OpenPGP signing of source uploads stays a host-side
 # responsibility; nothing here forwards signing agents into the container
 # (A-14).
+{#- Contract tail: actions LAST at top level, after the connections include -
+    renders the merged `actions:` mapping, zero bytes when empty (plan trap
+    10). A jinja comment, not a # line - the # header above is byte-pinned by
+    the golden baseline (scripts/tests/golden/). #}
 name: {{ workshop_name }}
 base: ubuntu@26.04
 sdks:
@@ -23,3 +27,4 @@ sdks:
 {% include 'partials/ssh-agent.yaml.j2' -%}
 connections:
 {% set oauth_tunnel_part = 'connections' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}
+{% include 'partials/actions.yaml.j2' -%}

@@ -44,11 +44,22 @@ config/                Data, not code (IS-8).
                          100GiB, ubuntu:26.04).
   local.json, <user>/config.json  Optional override layers (gitignored); deep-merge
                          order: config.json < local.json < <user>/config.json.
-  local/                 User-level gitignored customization tree (vars layers,
-                         hook fragments). May be created, never committed.
+                         A-12 amendment: per-instance scope exists for VARS
+                         layers only; identity config keeps NO per-instance layer.
+  local/                 User-level gitignored customization tree. May be created,
+                         never committed.
+    vars/{all,profile/<p>,instance/<name>}.{json,yaml}  User vars layers, applied
+                         in scope order (sdks.add/set/remove + actions; strict
+                         schema). One format per slot; .yml never read.
+    hooks/{all,<p>,<name>}/{setup-project,check-health}.d/*.sh  User lifecycle
+                         fragments (see Invariant 2).
+  example/vars/{all,profile/sunbeam}.yaml  Commented example user vars layers;
+                         never loaded, validated by scripts/tests/test_examples.py.
 profiles/              Profiles as data (D-13, D-14).
   _partials/             Shared jinja2 partials: system-secret, oauth-tunnel,
-                         sdks-chain, ssh-agent.
+                         sdks-chain (dumb emitter over the computed `sdks`
+                         list), ssh-agent, actions (top-level `actions:`
+                         block; emits zero bytes when the mapping is empty).
   <profile>/workshop.yaml.j2  The profile template, composed ONLY from partials.
   <profile>/vars.{json,yaml}  Profile vars (snaps pins, tox, pythons, k8s,
                          extra_sdks, repo seed).
@@ -80,16 +91,22 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   pin-host-keys.sh       Pin ssh host keys for github.com, review.opendev.org,
                          git.launchpad.net.
   hooks/lib-common.sh    Shared bash library SOURCED by every setup-project
-                         hook; never duplicated.
+                         and check-health hook; never duplicated.
   vm/                    Sidecar VM lifecycle (create/destroy/shell/status,
                          cloud-init.yaml.j2, lib-vm.sh).
   ci/render-matrix.sh    The D-15 bounded render matrix (six enumerated names).
+  ci/capture-golden.sh   Regenerate the golden render baseline (clean main tree
+                         only; kept out of tests/ so run.sh never runs it).
   ci/user-layers-fixture.sh  CI proof of the config/local/vars/ contract with
                          synthetic user layers (render + vars-doc assertions).
   qa/host/sdk-gate.sh    The D-19 host-side SDK verification gate.
   tests/                 Shell suites (discovered live by run.sh) + pytest.
+  tests/golden/          Pinned rendered yaml for the six matrix names; the
+                         golden.sh suite byte-compares renders against it.
   sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
                          config layer merge (config.py), repo manager (repos.py),
+                         format-flexible data-doc loader (loader.py), user vars
+                         layers (uservars.py), SDK chain assembly (chain.py),
                          `just layers` report (layers.py).
 docs/                  The sphinx-stack docs site (D-16/D-17): MyST pages in the
                        four Diataxis quadrants (tutorial/, how-to/, explanation/,
@@ -203,14 +220,19 @@ Profiles are data; adding one never touches the render code (D-13/D-14).
    `profiles/_partials/*.yaml.j2` into `profiles/<name>/partials/` as a git
    symlink (`../../_partials/<file>`); `scripts/render.sh` refuses to render
    when a link is missing or broken.
-2. `profiles/<name>/vars.json` - profile defaults: snap pins (`snaps`), tox
-   (`tox`), interpreter list (`pythons`), extra store SDKs (`extra_sdks`,
-   inserted between `uv` and the project SDK), and the `core_repos` seed.
+2. `profiles/<name>/vars.{json,yaml}` - profile defaults: snap pins (`snaps`),
+   tox (`tox`), interpreter list (`pythons`), extra store SDKs (`extra_sdks`,
+   inserted between `uv` and the project SDK), optional tracked `actions`,
+   and the `core_repos` seed. One format per slot; `.yml` never read.
 3. `.workshop/<name>-tools/` - the in-project SDK: `sdk.yaml`
    (`name: <name>-tools`, `base: ubuntu@26.04`) plus `hooks/` (`setup-base`,
    `setup-project`, `check-health`; see Invariant 2 and the `hook-authoring`
-   skill). The shared `sdks-chain` partial lists `project-<name>-tools` last
-   automatically from the `profile` var.
+    skill). The SDK chain is assembled in Python
+    (`scripts/sunbeam_workshop/chain.py`: base chain -> `extra_sdks` -> user
+    `sdks.add` -> `project-<name>-tools` last); the shared `sdks-chain`
+    partial is a dumb emitter over that computed `sdks` list, and the
+    `actions` partial (included last, after the connections include) emits
+    the top-level `actions:` block.
 4. `config/repos/<name>.json` - the repo list for `just repos <name>`
    (seed it from the `core_repos` in the new `vars.json`).
 5. Validate: `just render <name>`, then
@@ -266,12 +288,22 @@ Repo rules on top of the contract:
   `check-health` under `.workshop/<profile>-tools/hooks/` as executable bash
   with a shell shebang (non-shell payloads such as `tox-requirements.txt`
   share the directory and are skipped by the shellcheck gate).
-- `setup-project` SOURCES `/project/scripts/hooks/lib-common.sh`; the shared
-  provisioning steps live there and are never duplicated into a hook.
+- `setup-project` and `check-health` SOURCE
+  `/project/scripts/hooks/lib-common.sh`; the shared provisioning steps live
+  there and are never duplicated into a hook. `check-health` runs as root
+  and sources it definitions-only: never call the `$HOME`-based helpers
+  from that root context.
 - Provisioning failures in `setup-project` are loud but non-fatal
   (`run_step`): `check-health` is the authoritative gate. Every failure path
   in `check-health` calls `workshopctl set-health --code=<reason> error`
   with a message and exits non-zero; the hook ends with `set-health okay`.
+- User lifecycle fragments under
+  `config/local/hooks/{all,<profile>,<instance>}/{setup-project,check-health}.d/*.sh`
+  are sourced by `run_user_fragments` (subshell-isolated, lexical order):
+  fail-soft as `setup-project`'s last step via `run_step`, fail-hard
+  immediately before `check-health`'s final `set-health okay`
+  (`--code=user-fragment-<first>`). `setup-base` and save/restore-state
+  have no fragment seam.
 
 ### 3. Rendered files are generated - edit templates, not outputs
 
