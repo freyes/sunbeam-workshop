@@ -36,9 +36,9 @@ The three layers
    └──────────────────────────────────────────────────────────────────┘
 
 **The host** holds the single ``just`` entry point, the layered
-configuration, and the only long-lived secret: the GitHub token in the
-host keyring. LXD and the Workshop snap do the heavy lifting; this
-repository orchestrates them.
+configuration, and the long-lived secrets: the GitHub token and the
+OpenRouter key in the host keyring. LXD and the Workshop snap do the heavy
+lifting; this repository orchestrates them.
 
 **Workshop containers** are LXD containers launched by the Workshop snap,
 one per named instance. Each mounts this repository at ``/project``, so the
@@ -110,8 +110,9 @@ order (the shared ``sdks-chain`` partial renders it):
    ``extra_sdks`` vars key; packaging inserts ``orange-dev-tools``
    (``latest/edge``).
 7. ``project-<profile>-tools`` - this repository's own SDK, carrying the
-   ``setup-base``, ``setup-project``, and ``check-health`` hooks. The
-   ssh-agent plug is grafted onto this entry.
+   ``setup-base``, ``setup-project``, and ``check-health`` hooks. Two plugs
+   are grafted onto this entry: the ssh-agent forwarding plug and the
+   ``openrouter-key`` secret plug.
 
 Order matters: the openchamber SDK builds on opencode, and the in-project
 tools SDK runs last so its health check can gate on everything before it.
@@ -124,22 +125,42 @@ Credential flow
 
 .. code-block:: text
 
-   Host keyring                                   Workshop container
-   ───────────                                    ──────────────────
-   GitHub token ──► system:github-token ────────► gh-cli:github-token plug
-   (stored by         secret slot                    (workshop connect)
-   just secret-setup)   attributes:                    │
-                        service: gh:github.com         ▼
-                        username: ""                gh runs with the token
-                                                    injected per command
+    Host keyring                                   Workshop container
+    ───────────                                    ──────────────────
+    GitHub token ──► system:github-token ────────► gh-cli:github-token plug
+    (stored by         secret slot                    (workshop connect)
+    just secret-setup)   attributes:                    │
+                         service: gh:github.com         ▼
+                         username: ""                gh runs with the token
+                                                     injected per command
 
-   Host ssh-agent ──► ssh-agent plug (grafted on project-<profile>-tools)
-                    ──► git over ssh to GitHub, Gerrit, Launchpad works
-                        without copying private keys
+    OpenRouter key ► system:openrouter-key ──────► <profile>-tools:openrouter-key
+    (stored by         secret slot                    plug (manual connect -
+     just secret-setup)   attributes:                   just secret-setup <name>)
+                         service: sunbeam-             │
+                         workshop-openrouter-key        ▼
+                                                   workshopctl get-secret in the
+                                                   setup-project hook writes
+                                                   ~/.local/share/opencode/auth.json;
+                                                   openchamber-opencode restarts
+                                                   on change
 
-   Browser (host) ──► localhost:19876 ──► system:mcp-oauth-callback plug
-                    ──► opencode:opencode-mcp-oauth-callback slot
-                        (Atlassian OAuth consent reaches opencode)
+    Host ssh-agent ──► ssh-agent plug (grafted on project-<profile>-tools)
+                     ──► git over ssh to GitHub, Gerrit, Launchpad works
+                         without copying private keys
+
+    Browser (host) ──► localhost:19876 ──► system:mcp-oauth-callback plug
+                     ──► opencode:opencode-mcp-oauth-callback slot
+                         (Atlassian OAuth consent reaches opencode)
+
+The OpenRouter lane converges in two steps. On a first launch the manual
+secret connect cannot happen during the launch change, so ``just
+secret-setup`` (run by the guided setup once the instance reports Ready)
+connects the plug and re-runs the writer inside the workshop. On a
+refresh, the container's writable layer is discarded and ``auth.json`` is
+re-derived from scratch: the platform restores the preserved connection
+before the ``setup-project`` hook runs, so the writer rebuilds the same
+file.
 
 Three rules keep this safe:
 
