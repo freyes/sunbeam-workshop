@@ -21,6 +21,7 @@ shell name:
 stop name:
     exec workshop stop "{{name}}"
 
-# Remove a workshop instance and its container
+# Remove a workshop instance and its container (an unlaunched instance's
+# rendered definition is removed too)
 remove name:
-    exec workshop remove "{{name}}"
+    exec bash scripts/remove.sh "{{name}}"
