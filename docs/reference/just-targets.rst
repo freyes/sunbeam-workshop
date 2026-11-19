@@ -34,7 +34,7 @@ Instance lifecycle
      - Stop a running instance.
      - -
    * - ``just remove <name>``
-     - Remove an instance and its container.
+     - Remove an instance and its container; a never-launched instance (``workshop remove`` refuses it with "not launched") is removed by dropping its rendered ``.workshop/<name>.yaml`` definition. Unrelated failures propagate unchanged.
      - -
 
 Host and credentials
