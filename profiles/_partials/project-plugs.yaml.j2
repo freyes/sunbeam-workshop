@@ -1,0 +1,22 @@
+# Shared partial - plugs grafted onto the in-project tools SDK: ssh-agent
+# forwarding (draft A-10) and the openrouter-key secret plug (draft D-21).
+#
+# ssh-agent forwards the host SSH agent so git over ssh (GitHub, Gerrit,
+# Launchpad) works inside the workshop without copying private keys;
+# awesome-multirepo hung this plug on vscode-remote, which is forbidden
+# here. The system:ssh-agent slot is implicit, so no explicit connection
+# entry is needed (workshop auto-connects same-interface plug/slot pairs).
+# openrouter-key reads the OpenRouter API key from the system
+# openrouter-key secret slot; secret plugs never auto-connect, so
+# scripts/secret-setup.sh wires it with `workshop connect`.
+#
+# ONE `plugs:` mapping carries both plugs: a second partial emitting
+# `plugs:` under the same SDK entry would duplicate the YAML key.
+#
+# Include immediately after the sdks-chain include so this graft nests
+# under the trailing project-<profile>-tools entry.
+  plugs:
+    ssh-agent:
+      interface: ssh-agent
+    openrouter-key:
+      interface: secret

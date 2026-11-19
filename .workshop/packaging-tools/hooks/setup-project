@@ -82,6 +82,12 @@ if [ -n "$vars_doc" ]; then
     run_step "apply_git_identity $vars_doc" apply_git_identity "$vars_doc"
 fi
 
+# opencode OpenRouter auth: converge ~/.local/share/opencode/auth.json from
+# the openrouter-key secret plug. The plug is wired by `just secret-setup
+# <name>` post-launch (manual secret connects cannot happen during the
+# launch change); refresh/restore re-derive the file via this step.
+run_step "write_opencode_auth" write_opencode_auth packaging-tools.openrouter-key
+
 # User lifecycle fragments (config/local/hooks/{all,packaging,<hostname>}/
 # setup-project.d/*.sh) run fail-soft as the last step; check-health gates
 # its own fragment set fail-hard.

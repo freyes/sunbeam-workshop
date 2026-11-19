@@ -56,6 +56,18 @@ if ! sudo -u "$workshop_user" test -e "$skills_link"; then
     exit 1
 fi
 
+# Corrupt-only opencode auth gate: absence of auth.json is an expected
+# first-launch state (the openrouter secret plug cannot be connected until
+# the workshop is Ready) and MUST NOT fail health; only a present-but-
+# malformed file does. An Error-status workshop rejects both `workshop
+# connect` and refresh, so only the Ready-instance path or a fresh launch
+# can re-converge.
+if ! check_opencode_auth "/home/$workshop_user/.local/share/opencode/auth.json"; then
+    workshopctl set-health --code=corrupt-opencode-auth error \
+        "/home/$workshop_user/.local/share/opencode/auth.json exists but is not valid opencode auth JSON; delete it, then re-converge: re-run 'just secret-setup <name>' on the host if the instance still reports Ready, else 'just remove <name>' and 'just setup <name>' (a fresh launch re-runs the hooks and the writer rebuilds the file from the connected secret)"
+    exit 1
+fi
+
 # User lifecycle fragments (config/local/hooks/{all,charmed,<hostname>}/
 # check-health.d/*.sh) run fail-hard: the first failure's name becomes the
 # set-health code and the workshop never reaches Ready.

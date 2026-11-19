@@ -11,3 +11,4 @@ Step-by-step guides covering key operations and common tasks.
    add-a-release-note
    authenticate-github
    authenticate-jira-mcp
+   authenticate-opencode

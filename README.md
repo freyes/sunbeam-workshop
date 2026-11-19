@@ -20,7 +20,9 @@ just by adding a suffix.
   your GitHub token in the host keyring; the rendered `github-token` secret
   plug delivers it to `gh` inside the workshop on request. No token is ever
   written to this repository, the rendered yaml, or the container
-  environment.
+  environment. An optional OpenRouter key (the prompt is skippable with
+  Enter) flows to opencode's `auth.json` the same way, through the
+  `openrouter-key` secret plug.
 - **Jira MCP, pre-seeded.** The Atlassian MCP server entry is seeded into the
   opencode config at provisioning; OAuth consent runs through
   `opencode mcp auth atlassian`, with the browser callback forwarded into the

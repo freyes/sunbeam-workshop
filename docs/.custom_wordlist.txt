@@ -108,6 +108,8 @@ omo
 openchamber
 opencode
 opendev
+openrouter
+OpenRouter
 parseable
 passthrough
 passwordless

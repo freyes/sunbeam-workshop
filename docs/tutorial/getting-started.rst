@@ -40,12 +40,18 @@ prerequisites, not something setup can create for you. Before you start:
 - A **GitHub account** and a personal access token, which
   ``just secret-setup`` asks for. :doc:`../how-to/authenticate-github`
   covers the whole flow.
-- A **GitHub Copilot seat**. GitHub Copilot is the seeded opencode provider;
-  the first opencode session signs in through its device flow.
+- An **OpenRouter API key** (optional, but recommended). Create one at
+  `https://openrouter.ai/settings/keys <https://openrouter.ai/settings/keys>`_.
+  Without a stored key opencode cannot authenticate inside the workshop;
+  the prompt during setup is optional, and pressing Enter skips it - you
+  can add the key later. :doc:`../how-to/authenticate-opencode` covers
+  the whole flow.
 - **Atlassian Cloud access**
   (`https://id.atlassian.com <https://id.atlassian.com>`_) for the Jira MCP
-  server, plus **metered LLM spend** - the AI tooling consumes metered
-  model usage, so make sure that is budgeted for.
+  server. The Atlassian OAuth consent is the one interactive auth gate
+  setup cannot automate.
+- **OpenRouter credit** - the AI tooling consumes metered model usage
+  through your OpenRouter account, so make sure that is budgeted for.
 - An **Ubuntu One account** (`https://login.ubuntu.com <https://login.ubuntu.com>`_)
   and a signed **Canonical ICLA**
   (`https://ubuntu.com/legal/contributors <https://ubuntu.com/legal/contributors>`_).
@@ -105,11 +111,14 @@ interrupted run. It walks six steps:
 4. **Persist variables** - writes the merged variables document to
    ``.state/<name>.vars.json`` (mode 0600); the workshop hooks read your git
    identity from it.
-5. **Secrets** - stores your GitHub token in the host keyring (input is
-   hidden and never printed) and prepares the gh-cli secret plug.
+5. **Secrets** - stores your GitHub token and your OpenRouter key in the
+   host keyring (input is hidden and never printed; the OpenRouter prompt
+   is optional - pressing Enter skips it) and prepares the gh-cli and
+   openrouter secret plugs.
 6. **Launch** - runs ``workshop launch <name>`` and waits until
    ``workshop info <name>`` reports the instance Ready, then wires the
-   gh-cli secret plug.
+   gh-cli and openrouter secret plugs and converges opencode's OpenRouter
+   auth.
 
 Provisioning inside the container - the tox environment, the Atlassian MCP
 server entry, the agentic-skills symlink, SSH host-key pinning - runs as SDK
@@ -137,10 +146,13 @@ Inside, opencode is already on PATH:
 
    opencode
 
-On first run, opencode walks you through signing in to GitHub Copilot with
-its device flow. This is one of the two interactive auth gates in the
-workshop - the Atlassian OAuth consent in
-:doc:`../how-to/authenticate-jira-mcp` is the other. Both are manual by
+When an OpenRouter key is stored in the host keyring, opencode inside the
+workshop is authenticated automatically: the provisioning hooks write the
+key to opencode's ``auth.json`` from the OpenRouter secret. If the key was
+skipped at the prompt, opencode runs unauthenticated until you add one -
+re-run ``just secret-setup`` on the host, then ``just secret-setup
+<name>``. The only interactive auth gate left is the Atlassian OAuth
+consent in :doc:`../how-to/authenticate-jira-mcp` - it is manual by
 design: consent is human, and no setup step automates it.
 
 The OpenStack agentic skills (``canonical/openstack-agentic-skills``) are
@@ -180,6 +192,9 @@ Where to go next
 
 - :doc:`../how-to/authenticate-github` - the GitHub credential flow in
   depth, including troubleshooting.
+- :doc:`../how-to/authenticate-opencode` - store an OpenRouter API key and
+  authenticate opencode inside the workshop, including rotation and
+  troubleshooting.
 - :doc:`../how-to/authenticate-jira-mcp` - connect opencode to Jira through
   the Atlassian MCP server.
 - ``just repos <profile>`` - clone or update the profile's repositories

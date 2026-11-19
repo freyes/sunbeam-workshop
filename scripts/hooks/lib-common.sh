@@ -107,6 +107,98 @@ pin_forge_host_keys() {
     bash "$script" all
 }
 
+# write_opencode_auth <sdk-plug-spec> - converge the opencode auth file
+# (~/.local/share/opencode/auth.json) from the openrouter secret plug, e.g.
+# `write_opencode_auth sunbeam-tools.openrouter-key` (the RUNTIME sdk
+# name: workshopctl get-secret rejects `project-`-prefixed specs).
+# Contracts:
+#   * Workshop runs hooks under `set -x` with --verbose, so every
+#     expansion of the key is wrapped in a stderr-discarding brace group -
+#     the key must never reach a trace log (bash traces both the argv of
+#     `printf %s <key>` and the `key=<value>` assignment result). It never
+#     appears in argv either: printf is a builtin and the key moves by
+#     stdin pipe into jq -Rs, never through `jq --arg`.
+#   * The temp file is created 0600 by `umask 077` inside the pipe, and the
+#     same-dir `mv -f` publish preserves that mode (atomic rename).
+#   * An absent/unreadable secret is a LOUD warning + return 0, never a
+#     hook failure: the plug cannot be connected until the workshop is
+#     Ready, so first launch converges via `just secret-setup <name>`
+#     post-Ready (an Error-status workshop rejects `workshop connect`).
+#   * Content-compare convergence: an unchanged file means no restart; a
+#     changed file restarts openchamber-opencode.service (the opencode
+#     agent server) ONLY when the unit is active. Never `openchamber
+#     restart` - it restarts the web UI unit, not the agent server.
+#   * Foreign auth content (e.g. manually added provider entries) is NOT
+#     preserved: the file converges to the managed openrouter-only shape,
+#     with a loud warning before the overwrite.
+write_opencode_auth() {
+    local plug="${1:?write_opencode_auth needs an <sdk>.<secret> plug spec}"
+    local auth_dir="$HOME/.local/share/opencode"
+    local auth_file="$auth_dir/auth.json"
+    local tmp="$auth_dir/.auth.json.tmp"
+    local key="" rc=0
+    { key="$(workshopctl get-secret "$plug")"; } 2>/dev/null || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        case "$rc" in
+            1) echo "WARNING: no openrouter key found for $plug - run 'just secret-setup' on the host to store it, then 'just secret-setup <name>' to converge it into this workshop" >&2 ;;
+            2) echo "WARNING: the host keyring is locked, cannot read $plug; unlock it and re-run 'just secret-setup <name>'" >&2 ;;
+            3) echo "WARNING: $plug is not connected yet (expected on first launch); 'just secret-setup <name>' wires it and converges the opencode auth" >&2 ;;
+            4) echo "WARNING: $plug matched multiple keyring items; re-run 'just secret-setup' on the host" >&2 ;;
+            *) echo "WARNING: workshopctl get-secret $plug failed (rc=$rc)" >&2 ;;
+        esac
+        return 0
+    fi
+    if { [ -z "$key" ]; } 2>/dev/null; then
+        echo "WARNING: workshopctl get-secret $plug returned an empty key; run 'just secret-setup' on the host to store it, then 'just secret-setup <name>' to converge it into this workshop" >&2
+        return 0
+    fi
+    if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+        XDG_RUNTIME_DIR="/run/user/$(id -u)"
+        export XDG_RUNTIME_DIR
+    fi
+    mkdir -p "$auth_dir"
+    { ( umask 077; printf '%s' "$key" | jq -Rs '{openrouter: {type: "api", key: .}}' > "$tmp" ); } 2>/dev/null \
+        || { rm -f "$tmp"; echo "ERROR: writing $tmp failed; opencode auth not converged" >&2; return 1; }
+    if [ -f "$auth_file" ] && cmp -s "$tmp" "$auth_file"; then
+        rm -f "$tmp"
+        echo "opencode auth.json already up to date; no restart needed."
+        return 0
+    fi
+    if [ -f "$auth_file" ] && jq . "$auth_file" >/dev/null 2>&1 \
+        && ! jq -e 'keys == ["openrouter"]' "$auth_file" >/dev/null 2>&1; then
+        echo "WARNING: $auth_file carries foreign auth content (e.g. manually added provider entries); replacing it with the managed openrouter-only shape - manual edits are not preserved." >&2
+    fi
+    mv -f "$tmp" "$auth_file"
+    echo "opencode auth.json converged: $auth_file"
+    if systemctl --user is-active --quiet openchamber-opencode.service 2>/dev/null; then
+        systemctl --user restart openchamber-opencode.service
+        echo "restarted openchamber-opencode.service to pick up the new key."
+    else
+        echo "openchamber-opencode.service not active; no restart."
+    fi
+}
+
+# check_opencode_auth <auth-file-path> - corrupt-only health gate for the
+# opencode auth file (paired with write_opencode_auth). Returns 0 when the
+# file is ABSENT - an expected first-launch state: the openrouter secret
+# plug cannot be connected until the workshop is Ready, so absence must
+# never fail health (an Error-status workshop rejects `workshop connect`
+# and refresh) - or present and valid opencode auth JSON. A
+# present-but-malformed file prints one failure line naming the file and
+# returns 1; check-health maps that to `workshopctl set-health
+# --code=corrupt-opencode-auth error`. The path is an EXPLICIT argument
+# (check-health runs as root and must not rely on $HOME), and the jq
+# output is discarded so the key is never printed.
+check_opencode_auth() {
+    local auth_file="${1:?check_opencode_auth needs an auth file path}"
+    [ -f "$auth_file" ] || return 0
+    if jq -e '(.openrouter.type == "api") and (.openrouter.key | type == "string" and length > 0)' "$auth_file" >/dev/null 2>&1; then
+        return 0
+    fi
+    echo "ERROR: $auth_file exists but is not valid opencode auth JSON" >&2
+    return 1
+}
+
 # find_vars_doc <profile> - locate this instance's merged vars doc
 # (/project/.state/<name>.vars.json, persisted by scripts/setup.sh on the
 # host before launch). The hook environment does not carry the workshop name

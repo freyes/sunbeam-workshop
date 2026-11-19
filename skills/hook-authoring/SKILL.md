@@ -42,7 +42,8 @@ SDK has state that must survive `workshop refresh`.
 - `setup-project` configures the USER environment and SOURCES
   `/project/scripts/hooks/lib-common.sh` - the shared steps
   (`install_uv_pythons`, `build_tox_venv`, `seed_atlassian_mcp`,
-  `install_agentic_skills`, `pin_forge_host_keys`, git identity) live there
+  `install_agentic_skills`, `pin_forge_host_keys`, `write_opencode_auth`,
+  `check_opencode_auth`, git identity) live there
   and are never duplicated into a hook. Keep the
   `# shellcheck source=scripts/hooks/lib-common.sh` directive so the gate
   resolves it.
@@ -52,6 +53,13 @@ SDK has state that must survive `workshop refresh`.
 - No secrets in hooks, ever. Identity comes from the persisted merged vars
   doc (`/project/.state/<name>.vars.json`, 0600, written by `setup.sh`);
   credentials come from the host keyring through the secret plug.
+- Secret reads in hooks MUST wrap the `workshopctl get-secret` call - and
+  any expansion of its result, including empty-key checks and the JSON
+  build - in a brace group with stderr discarded, exactly as
+  `write_opencode_auth` does: Workshop runs hooks under xtrace with
+  `--verbose`, and bash traces assignment results and argv expansions, so
+  the key would otherwise reach the trace log. Never pass a key through
+  argv (e.g. `jq --arg`); pipe it via stdin instead.
 - Never `uv tool install` - it ignores hashes. Venvs are built with
   `--require-hashes` from the vendored `tox-requirements.txt`
   (`build_tox_venv`), rebuilt only when the requirements file's sha256
@@ -74,6 +82,11 @@ SDK has state that must survive `workshop refresh`.
   passed. Health states are `okay` / `waiting` / `error`; the workshop only
   reaches `Ready` when every SDK reports okay - `scripts/setup.sh`'s
   `wait_ready` polls exactly that aggregate signal.
+- The opencode auth gate is corrupt-only: `check_opencode_auth` gates a
+  present-but-malformed `auth.json` as `corrupt-opencode-auth`, but an
+  ABSENT file never fails health - the secret plug cannot be connected
+  until the workshop is Ready, so a hard absence gate would deadlock the
+  very first launch.
 
 ## Verify
 

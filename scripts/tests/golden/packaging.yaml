@@ -17,18 +17,25 @@
 name: packaging
 base: ubuntu@26.04
 sdks:
-# Shared partial - system SDK github-token secret slot (draft D-8).
+# Shared partial - system SDK secret slots (draft D-8, D-21).
 #
-# The gh-cli SDK reads its token through the github-token secret plug; this
-# slot names the host keyring item, never the token value
-# (canonical/gh-cli-sdk README, "Authenticate"). `username: ""` selects the
-# account gh is currently using on the host, so one definition works for
-# everyone on the project; without it the slot matches several keyring items
-# and fails with "multiple secrets match".
+# The system SDK declares TWO secret slots:
+#   - github-token: the gh-cli SDK reads its token through the
+#     github-token secret plug; this slot names the host keyring item,
+#     never the token value (canonical/gh-cli-sdk README, "Authenticate").
+#     `username: ""` selects the account gh is currently using on the
+#     host, so one definition works for everyone on the project; without
+#     it the slot matches several keyring items and fails with "multiple
+#     secrets match".
+#   - openrouter-key: opencode reads its OpenRouter API key through the
+#     openrouter-key secret plug; the slot names the keyring item that
+#     scripts/secret-setup.sh stores directly (service
+#     "sunbeam-workshop-openrouter-key").
 #
-# After launch the plug is wired with:
+# After launch the plugs are wired with:
 #   workshop connect <name>/gh-cli:github-token <name>/system:github-token
-# (the connection entry itself lives in oauth-tunnel.yaml.j2).
+#   workshop connect <name>/<profile>-tools:openrouter-key <name>/system:openrouter-key
+# (the connection entries themselves live in oauth-tunnel.yaml.j2).
 #
 # Include first under the top-level `sdks:` key; the oauth-tunnel "plug"
 # fragment nests under this same `- name: system` entry.
@@ -39,6 +46,10 @@ sdks:
       attributes:
         service: "gh:github.com"
         username: ""
+    openrouter-key:
+      interface: secret
+      attributes:
+        service: "sunbeam-workshop-openrouter-key"
 # Shared partial - MCP OAuth callback tunnel + AI-chain connections
 # (drafts D-8, D-9).
 #
@@ -69,7 +80,7 @@ sdks:
 #   "extra_sdks": [{"name": "orange-dev-tools", "channel": "latest/edge"}]
 #
 # Include under the top-level `sdks:` key, immediately followed by the
-# ssh-agent graft partial.
+# project-plugs graft partial.
 - name: opencode
 - name: openchamber
   channel: latest/edge
@@ -79,18 +90,28 @@ sdks:
 - name: orange-dev-tools
   channel: latest/edge
 - name: project-packaging-tools
-# Shared partial - ssh-agent plug grafted onto the in-project tools SDK
-# (draft A-10): forwards the host SSH agent so git over ssh (GitHub, Gerrit,
-# Launchpad) works inside the workshop without copying private keys.
-# awesome-multirepo hung this plug on vscode-remote, which is forbidden here.
-# The system:ssh-agent slot is implicit, so no explicit connection entry is
-# needed (workshop auto-connects same-interface plug/slot pairs).
+# Shared partial - plugs grafted onto the in-project tools SDK: ssh-agent
+# forwarding (draft A-10) and the openrouter-key secret plug (draft D-21).
 #
-# Include immediately after the sdks-chain include so this graft nests under
-# the trailing project-<profile>-tools entry.
+# ssh-agent forwards the host SSH agent so git over ssh (GitHub, Gerrit,
+# Launchpad) works inside the workshop without copying private keys;
+# awesome-multirepo hung this plug on vscode-remote, which is forbidden
+# here. The system:ssh-agent slot is implicit, so no explicit connection
+# entry is needed (workshop auto-connects same-interface plug/slot pairs).
+# openrouter-key reads the OpenRouter API key from the system
+# openrouter-key secret slot; secret plugs never auto-connect, so
+# scripts/secret-setup.sh wires it with `workshop connect`.
+#
+# ONE `plugs:` mapping carries both plugs: a second partial emitting
+# `plugs:` under the same SDK entry would duplicate the YAML key.
+#
+# Include immediately after the sdks-chain include so this graft nests
+# under the trailing project-<profile>-tools entry.
   plugs:
     ssh-agent:
       interface: ssh-agent
+    openrouter-key:
+      interface: secret
 connections:
 # Shared partial - MCP OAuth callback tunnel + AI-chain connections
 # (drafts D-8, D-9).
@@ -112,4 +133,10 @@ connections:
   slot: system:github-token
 - plug: system:mcp-oauth-callback
   slot: opencode:opencode-mcp-oauth-callback
+# The openrouter-key secret plug never auto-connects; scripts/secret-setup.sh
+# wires it with `workshop connect`. The ref uses the RUNTIME sdk name because
+# the platform strips the `project-` prefix (connection PlugRefs reject
+# `project-` names).
+- plug: packaging-tools:openrouter-key
+  slot: system:openrouter-key
 

@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 # Copyright 2026 Canonical Ltd. All rights reserved.
 #
-# secret-setup.sh [NAME] - store the GitHub token in the HOST keyring and
-# wire the gh-cli secret plug of a workshop instance (draft D-8, IS-7).
+# secret-setup.sh [NAME] - store the GitHub token and the OpenRouter key in
+# the HOST keyring and wire the gh-cli and openrouter secret plugs of a
+# workshop instance (draft D-8, IS-7).
 #
 #   Usage: bash scripts/secret-setup.sh [NAME]
-#     no NAME   only (1) and (2): keyring storage + host gh login
-#     NAME      additionally (3): connect NAME/gh-cli:github-token to
-#               NAME/system:github-token (the slot is declared by the
-#               rendered .workshop/NAME.yaml; the connect form follows the
-#               canonical/gh-cli-sdk README "Authenticate" section)
+#     no NAME   only (1), (1b) and (2): keyring storage + host gh login
+#     NAME      additionally (3) and (3b): connect NAME/gh-cli:github-token
+#               to NAME/system:github-token and NAME/<profile>-tools:openrouter-key
+#               to NAME/system:openrouter-key, then converge the opencode
+#               auth inside the instance once it reports Ready
 #
 # Flow:
 #   1. keyring: the PAT is stored once under
 #      `secret-tool store service sunbeam-workshop-github-token` and looked
 #      up from there on every re-run (idempotent repair).
+#   1b. keyring (optional): the OpenRouter key is stored once under
+#      `secret-tool store service sunbeam-workshop-openrouter-key`; the
+#      prompt is skippable - empty input warns and CONTINUES (owner
+#      decision: the key is optional; opencode stays unauthenticated until
+#      one is stored).
 #   2. host gh login: the rendered github-token secret slot reads gh's own
 #      keyring login (service gh:github.com, current account). If gh is not
 #      authenticated yet, the stored token is piped straight from the keyring
@@ -23,16 +29,24 @@
 #      NAME/system:github-token`, skipped with a clear note when the
 #      instance is not launched yet (guided setup runs this script before
 #      `workshop launch`; it re-runs it after the instance is Ready).
+#   3b. openrouter wiring + converger: resolve the instance's profile via
+#      the vars module (the same invocation scripts/render.sh uses),
+#      idempotently connect NAME/<profile>-tools:openrouter-key to
+#      NAME/system:openrouter-key (RUNTIME sdk name - the platform strips
+#      the `project-` prefix and connection refs reject it), and when the
+#      instance reports Ready run the shared writer inside it via
+#      `workshop exec` to converge ~/.local/share/opencode/auth.json.
 #
 # THE GITHUB_TOKEN TRAP (ck8s-dev AGENTS.md rules 10-11):
 #   * GITHUB_TOKEN and GH_TOKEN must NEVER be exported in the host shell or
 #     the container environment: gh prefers them over its stored login, so a
 #     stale or over-broad value silently overrides authentication and breaks
 #     standard gh commands.
-#   * The token is NEVER printed (read -rs; secret-tool and gh receive it
-#     only via stdin pipes) and NEVER written to a file, the rendered yaml,
-#     or this repository: the workshop definition carries keyring LOOKUP
-#     attributes, never the value.
+#   * The token and the OpenRouter key are NEVER printed (read -rs;
+#     secret-tool and gh receive them only via stdin pipes) and NEVER
+#     written to a file, the rendered yaml, or this repository: the
+#     workshop definition carries keyring LOOKUP attributes, never the
+#     value.
 #
 # Guard convention (IS-7): the just recipe wraps this script in assert-host;
 # run directly it still refuses inside the workshop container (the workshop
@@ -41,6 +55,8 @@ set -euo pipefail
 
 SERVICE="sunbeam-workshop-github-token"
 LABEL="GitHub Personal Access Token (sunbeam-workshop)"
+OR_SERVICE="sunbeam-workshop-openrouter-key"
+OR_LABEL="OpenRouter API Key (sunbeam-workshop)"
 
 # --- in-container refusal (mirrors the Justfile assert-host guard) ---
 if [ "${I_KNOW_WHAT_IM_DOING:-0}" != "1" ] && [ "${USER:-}" = "workshop" ]; then
@@ -90,6 +106,30 @@ else
     echo "✓ GitHub token stored in the host keyring (service $SERVICE)."
 fi
 
+# --- 1b. openrouter keyring storage (OPTIONAL: Enter skips) ---------------
+# Mirrors the GitHub block above with ONE deliberate deviation (owner
+# decision: the OpenRouter key is optional) - empty input warns and
+# CONTINUES instead of aborting, so a workshop without a key still builds
+# Ready and the key can be added later by re-running this script.
+if secret-tool lookup service "$OR_SERVICE" >/dev/null 2>&1; then
+    echo "✓ OpenRouter key already stored in the host keyring (service $OR_SERVICE)."
+    echo "  Replace it with: secret-tool clear service $OR_SERVICE && just secret-setup"
+else
+    echo "Enter your OpenRouter API Key (input hidden, press Enter to skip)."
+    echo "Create one at https://openrouter.ai/settings/keys"
+    printf 'Key: '
+    or_key=""
+    read -rs or_key
+    echo ""
+    if [ -z "$or_key" ]; then
+        echo "WARNING: no key entered; skipping the OpenRouter key - opencode will stay unauthenticated until you store one; re-run 'just secret-setup' to add it." >&2
+    else
+        printf '%s' "$or_key" | secret-tool store --label="$OR_LABEL" service "$OR_SERVICE"
+        unset or_key
+        echo "✓ OpenRouter key stored in the host keyring (service $OR_SERVICE)."
+    fi
+fi
+
 # --- 2. host gh login (the item the rendered secret slot reads) -----------
 if ! command -v gh >/dev/null 2>&1; then
     echo "ERROR: 'gh' is not installed on the host." >&2
@@ -134,3 +174,43 @@ else
     workshop connect "$plug" "$slot"
     echo "✓ Connected $plug to $slot."
 fi
+
+# --- 3b. openrouter plug wiring + post-Ready converger --------------------
+# The openrouter secret plug never auto-connects (secret plugs are
+# manual-only upstream), so wire it here and converge the opencode auth
+# inside a Ready instance. Every step degrades gracefully: an
+# unresolvable profile or a not-yet-Ready instance skips with a note.
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+profile="$( cd "$script_dir/.." && uv run --frozen --project "$script_dir" python -m sunbeam_workshop vars "$name" 2>/dev/null | jq -r '.profile // empty' )" || profile=""
+if [ -z "$profile" ] || ! [[ "$profile" =~ ^[a-z0-9-]+$ ]]; then
+    echo "WARNING: could not resolve the profile of '$name' via the vars module;" >&2
+    echo "         skipping the openrouter plug wiring and the opencode auth converger." >&2
+    exit 0
+fi
+
+or_plug="$name/${profile}-tools:openrouter-key"
+or_slot="$name/system:openrouter-key"
+
+if workshop connections "$name" 2>/dev/null | grep -qE "^[[:space:]]*secret[[:space:]]+${or_plug}[[:space:]]+${or_slot}[[:space:]]"; then
+    echo "✓ $or_plug already connected to $or_slot."
+else
+    workshop connect "$or_plug" "$or_slot"
+    echo "✓ Connected $or_plug to $or_slot."
+fi
+
+# The writer needs a live instance: converge only when Ready (the status
+# parse mirrors scripts/setup.sh, quoted-value tolerant).
+status="$(workshop info "$name" 2>/dev/null | awk '/^[[:space:]]*status:/ {print $2}' || true)"
+status="${status#\"}"
+status="${status%\"}"
+case "$status" in
+    [rR]eady)
+        workshop exec "$name" -- bash -c "set -euo pipefail; . /project/scripts/hooks/lib-common.sh && write_opencode_auth ${profile}-tools.openrouter-key"
+        echo "✓ Converged the opencode auth inside '$name' (auth.json re-derived from the openrouter secret)."
+        ;;
+    *)
+        echo "⊘ Workshop '$name' is '${status:-not reporting a status yet}';"
+        echo "  the opencode auth converger runs via 'just secret-setup $name' once the instance is Ready."
+        ;;
+esac
+exit 0

@@ -20,6 +20,6 @@ sdks:
 {% include 'partials/system-secret.yaml.j2' -%}
 {% set oauth_tunnel_part = 'plug' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}
 {% include 'partials/sdks-chain.yaml.j2' -%}
-{% include 'partials/ssh-agent.yaml.j2' -%}
+{% include 'partials/project-plugs.yaml.j2' -%}
 connections:
 {% set oauth_tunnel_part = 'connections' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}
