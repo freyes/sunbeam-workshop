@@ -141,7 +141,7 @@ chmod 0600 "$vars_file"
 echo "✓ Wrote $vars_file"
 
 banner 5 "Secrets"
-echo "Stores the GitHub token in the host keyring and wires the gh-cli plug."
+echo "Stores the GitHub token and the OpenRouter key (optional - Enter skips it) in the host keyring and wires the gh-cli and openrouter secret plugs."
 require_script scripts/secret-setup.sh
 bash scripts/secret-setup.sh "$name"
 
@@ -166,10 +166,11 @@ case "$status" in
 esac
 wait_ready
 
-# The gh-cli secret plug is a manual connection and the instance did not
-# exist when step 5 ran, so wire it now. secret-setup.sh is idempotent: the
-# keyring steps report already-done and only the connect is new.
-echo "Wiring the gh-cli secret plug (idempotent re-run of the secrets step)."
+# The gh-cli and openrouter secret plugs are manual connections and the
+# instance did not exist when step 5 ran, so wire them now. secret-setup.sh
+# is idempotent: the keyring steps report already-done and only the
+# connects are new; it also converges the opencode auth config.
+echo "Wiring the secret plugs (gh-cli + openrouter) and converging opencode auth (idempotent re-run of the secrets step)."
 bash scripts/secret-setup.sh "$name"
 
 # The repos hint names the resolved profile: first-dash truncation of the
