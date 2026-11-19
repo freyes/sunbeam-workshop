@@ -7,7 +7,7 @@
 #      under that same system entry;
 #   3. sdks-chain renders opencode -> openchamber@latest/edge -> gh-cli ->
 #      uv@latest/stable -> project-sunbeam-tools;
-#   4. ssh-agent immediately after, so the graft nests under
+#   4. project-plugs immediately after, so the graft nests under
 #      project-sunbeam-tools;
 #   5. oauth-tunnel with oauth_tunnel_part = 'connections' under
 #      `connections:` (gh-cli:github-token -> system:github-token and
@@ -18,6 +18,6 @@ sdks:
 {% include 'partials/system-secret.yaml.j2' -%}
 {% set oauth_tunnel_part = 'plug' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}
 {% include 'partials/sdks-chain.yaml.j2' -%}
-{% include 'partials/ssh-agent.yaml.j2' -%}
+{% include 'partials/project-plugs.yaml.j2' -%}
 connections:
 {% set oauth_tunnel_part = 'connections' %}{% include 'partials/oauth-tunnel.yaml.j2' -%}

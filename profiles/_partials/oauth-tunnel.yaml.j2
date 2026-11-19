@@ -23,6 +23,12 @@
   slot: system:github-token
 - plug: system:mcp-oauth-callback
   slot: opencode:opencode-mcp-oauth-callback
+# The openrouter-key secret plug never auto-connects; scripts/secret-setup.sh
+# wires it with `workshop connect`. The ref uses the RUNTIME sdk name because
+# the platform strips the `project-` prefix (connection PlugRefs reject
+# `project-` names).
+- plug: {{ profile }}-tools:openrouter-key
+  slot: system:openrouter-key
 {% else %}
 {# Deliberate render error: set oauth_tunnel_part before including. #}
 {{ 1 / 0 }}
