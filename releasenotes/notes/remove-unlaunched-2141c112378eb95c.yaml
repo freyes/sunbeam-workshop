@@ -1,0 +1,12 @@
+---
+fixes:
+  - |
+    ``just remove <name>`` now removes a workshop instance that was rendered
+    but never launched: previously ``workshop remove`` refused such an
+    instance with "workshop not launched" and the recipe failed. A launched
+    instance is still passed through to ``workshop remove`` unchanged; on the
+    "not launched" refusal the recipe now deletes the rendered
+    ``.workshop/<name>.yaml`` definition and exits 0. Every other failure
+    (unknown name, LXD down, ...) still propagates its output and exit code
+    unchanged. The logic lives in the new ``scripts/remove.sh`` following the
+    D-12 script discipline; the recipe stays a thin dispatcher.
