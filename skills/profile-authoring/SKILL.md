@@ -51,8 +51,10 @@ jinja2-cli roots its loader at the template's own directory, and
 broken. Include order is the contract (copy the existing templates exactly):
 
 1. `partials/system-secret.yaml.j2` FIRST under `sdks:` - it opens the
-   `- name: system` entry carrying the `github-token` secret slot (keyring
-   LOOKUP attributes, never a value).
+   `- name: system` entry carrying TWO secret slots, `github-token` and
+   `openrouter-key`, both keyring LOOKUP attributes only, never a value
+   (`github-token`: `service: "gh:github.com"`, `username: ""`;
+   `openrouter-key`: `service: "sunbeam-workshop-openrouter-key"`).
 2. `{% set oauth_tunnel_part = 'plug' %}` then include
    `partials/oauth-tunnel.yaml.j2` - nests the `mcp-oauth-callback` tunnel
    plug (endpoint `localhost:19876`) under that same system entry.
@@ -62,14 +64,26 @@ broken. Include order is the contract (copy the existing templates exactly):
    entries (packaging uses this for `orange-dev-tools@latest/edge` so its
    apt base lands before the project hooks run), then
    `project-<profile>-tools`.
-4. `partials/ssh-agent.yaml.j2` IMMEDIATELY after the chain, so the
-   ssh-agent graft nests under the trailing `project-<profile>-tools` entry.
+4. `partials/project-plugs.yaml.j2` IMMEDIATELY after the chain, so its
+   grafts nest under the trailing `project-<profile>-tools` entry. The
+   partial carries BOTH plugs in one `plugs:` mapping - `ssh-agent`
+   (interface `ssh-agent`; the system slot is implicit and auto-connects)
+   and `openrouter-key` (interface `secret`). One mapping, not two
+   partials: a second partial emitting `plugs:` under the same SDK entry
+   would duplicate the YAML key.
 5. Under top-level `connections:`,
    `{% set oauth_tunnel_part = 'connections' %}` and include
-   `partials/oauth-tunnel.yaml.j2` again - emits the
-   `gh-cli:github-token -> system:github-token` manual connection and the
+   `partials/oauth-tunnel.yaml.j2` again - emits THREE entries: the
+   `gh-cli:github-token -> system:github-token` manual connection, the
    `system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback`
-   tunnel connection.
+   tunnel connection, and
+   `{{ profile }}-tools:openrouter-key -> system:openrouter-key`. The
+   openrouter entry uses the RUNTIME (stripped) SDK name
+   `<profile>-tools:openrouter-key`: `project-` is a definition-file
+   source marker that the platform strips at runtime, and connection
+   refs and `workshopctl get-secret` reject `project-`-prefixed names.
+   Secret plugs never auto-connect - `scripts/secret-setup.sh` wires
+   them with `workshop connect`.
 
 The oauth-tunnel partial deliberately renders an error when
 `oauth_tunnel_part` is unset or misspelled - that is the contract working,
