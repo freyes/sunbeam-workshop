@@ -151,6 +151,37 @@ test_provisioning_calls_go_through_run_step() {
     done
 }
 
+# Every setup-project hook routes write_opencode_auth through run_step with
+# its profile-specific plug spec (the RUNTIME SDK name - workshopctl
+# get-secret rejects project--prefixed specs).
+test_setup_project_wires_write_opencode_auth() {
+    local profile hook expected
+    for profile in "${PROFILES[@]}"; do
+        hook=$(hook_path "$profile")
+        expected="run_step \"write_opencode_auth\" write_opencode_auth ${profile}-tools.openrouter-key"
+        grep -qF "$expected" "$hook" \
+            || fail "$hook lacks the exact '$expected' run_step wiring"
+    done
+}
+
+# Every check-health hook carries the corrupt-opencode-auth gate, and the
+# gate precedes the final set-health okay (a gate after it could never
+# fire).
+test_check_health_opencode_auth_gate_precedes_okay() {
+    local profile hook gate_line okay_line
+    for profile in "${PROFILES[@]}"; do
+        hook=$(check_health_path "$profile")
+        grep -q 'corrupt-opencode-auth' "$hook" \
+            || fail "$hook lacks the corrupt-opencode-auth gate"
+        gate_line=$(grep -n 'corrupt-opencode-auth' "$hook" | head -n 1 | cut -d: -f1 || true)
+        okay_line=$(grep -n 'workshopctl set-health okay' "$hook" | tail -n 1 | cut -d: -f1 || true)
+        [ -n "$gate_line" ] || fail "$hook: corrupt-opencode-auth gate line not found"
+        [ -n "$okay_line" ] || fail "$hook lacks the final workshopctl set-health okay"
+        [ "$gate_line" -lt "$okay_line" ] \
+            || fail "$hook: auth gate (line $gate_line) must precede set-health okay (line $okay_line)"
+    done
+}
+
 test_bare_call_assertion_catches_zero_arg_mutant() (
     local fixture_hook status
     fixture_hook="${SUITE_TMP}/mutant-hook"
@@ -668,6 +699,8 @@ test_check_health_sources_lib_common
 test_provisioning_calls_go_through_run_step
 test_fragments_call_is_last_run_step
 test_check_health_fragment_block_precedes_okay
+test_setup_project_wires_write_opencode_auth
+test_check_health_opencode_auth_gate_precedes_okay
 test_bare_call_assertion_catches_zero_arg_mutant
 test_charmed_vars_doc_lookup_never_fatal
 test_find_vars_doc_bare_name_hit
