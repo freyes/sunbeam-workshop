@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Every profile now declares an ``openrouter-key`` secret slot, plug graft
+    and connection: the OpenRouter API key reaches opencode's ``auth.json``
+    through a dedicated secret plug instead of any file or environment
+    variable in this repository. ``just secret-setup`` prompts for an
+    OPTIONAL OpenRouter key (pressing Enter skips it) and wires the plug;
+    the key is stored in the host keyring under the
+    ``sunbeam-workshop-openrouter-key`` service. opencode's ``auth.json`` is
+    provisioned on launch/refresh and re-derived after refresh whenever a
+    key is stored, and the openchamber-opencode service restarts only when
+    the auth content actually changes.

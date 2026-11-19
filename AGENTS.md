@@ -21,7 +21,9 @@ instantiates the same profile under a new name (`just setup packaging-foo`).
 Every profile declares the same AI/tooling SDK chain: opencode, openchamber
 (`latest/edge`, serves the UI on :3000), gh-cli (token from the host keyring
 via a secret plug), uv, then the in-project `project-<profile>-tools` SDK
-carrying this repo's hooks. The Atlassian (Jira) MCP server is seeded into
+carrying this repo's hooks. The OpenRouter key reaches opencode's auth.json
+through the openrouter secret plug; `just secret-setup` stores it.
+The Atlassian (Jira) MCP server is seeded into
 the opencode config by `setup-project`, and
 `canonical/openstack-agentic-skills` is cloned and symlinked into the
 opencode skills directory. There is no omp, no vscode, and no herdr anywhere
@@ -48,7 +50,8 @@ config/                Data, not code (IS-8).
                          hook fragments). May be created, never committed.
 profiles/              Profiles as data (D-13, D-14).
   _partials/             Shared jinja2 partials: system-secret, oauth-tunnel,
-                         sdks-chain, ssh-agent.
+                         sdks-chain, project-plugs (ssh-agent + openrouter-key
+                         grafts).
   <profile>/workshop.yaml.j2  The profile template, composed ONLY from partials.
   <profile>/vars.{json,yaml}  Profile vars (snaps pins, tox, pythons, k8s,
                          extra_sdks, repo seed).
@@ -155,7 +158,7 @@ side, and the dangerous ones only work where they must.
 | `just shell <name>` | Interactive shell in a running instance | - |
 | `just stop <name>` / `just remove <name>` | Stop / remove an instance | - |
 | `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `git/` of the repo checkout - `/project/git` inside the container (github, opendev+Gerrit, launchpad). Extra args pass through to the repo manager; `--filter <glob>` (repeatable, ORed) limits the run to matching repo names, e.g. `just repos packaging --filter 'neutron*'` | `assert-host` |
-| `just secret-setup` / `just secret-setup <name>` | Store the GitHub token in the host keyring, log in host `gh`, wire the instance's gh-cli secret plug | `assert-host` |
+| `just secret-setup` / `just secret-setup <name>` | Store the GitHub token and the OpenRouter key (skippable) in the host keyring, log in host `gh`, wire the instance's gh-cli + openrouter secret plugs, converge opencode auth | `assert-host` |
 | `just vm-create` / `just vm-destroy` | Sidecar VM lifecycle (sunbeam profile; destroy keeps `.state/vm/` unless `PURGE=1`) | `assert-host` |
 | `just vm-status` / `just vm-shell` | Sidecar VM state (read-only) / ssh shell | - |
 | `just lint` | Local twin of the CI lint workflow: shellcheck, hook gate, just-recipe gate, actionlint, config/template validation | - |
@@ -246,8 +249,11 @@ All agents operating in this repo MUST obey the following invariants.
   keyring by `just secret-setup` (`scripts/secret-setup.sh`, service
   `sunbeam-workshop-github-token`); the rendered `system:github-token`
   secret slot carries keyring LOOKUP attributes (`service: "gh:github.com"`,
-  `username: ""`), never the value. `.state/` (mode 0700) and
-  `.openchamber-password` are gitignored.
+  `username: ""`), never the value. The optional OpenRouter key is stored
+  the same way under the host-keyring service
+  `sunbeam-workshop-openrouter-key`, and the rendered `system:openrouter-key`
+  slot likewise carries lookup attributes, never the value. `.state/`
+  (mode 0700) and `.openchamber-password` are gitignored.
 - **CRITICAL TRAP**: `GITHUB_TOKEN` and `GH_TOKEN` MUST NEVER be exported in
   the host shell or the container environment. `gh` prefers them over its
   stored keyring login, so a stale or over-broad value silently overrides
@@ -346,7 +352,7 @@ activity.
 | `just remove <name>` | Remove an instance and its container |
 | `just doctor [name]` | Read-only host prerequisite checks |
 | `just repos [profile]` | Clone or update the per-profile repository checkouts (guarded) |
-| `just secret-setup [name]` | Host keyring storage + gh-cli secret-plug wiring (guarded) |
+| `just secret-setup [name]` | Store the GitHub token and the OpenRouter key (skippable) in the host keyring, log in host `gh`, wire the instance's gh-cli + openrouter secret plugs, converge opencode auth (guarded) |
 | `just vm-create` | Create/provision the sunbeam sidecar dev VM (guarded) |
 | `just vm-destroy` | Revoke the LXD trust server-side and delete the VM (guarded; `PURGE=1` also drops `.state/vm/`) |
 | `just vm-shell` | Interactive ssh shell on the sidecar VM |
