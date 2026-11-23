@@ -13,7 +13,12 @@
 #   workshop     logs every invocation to $WORKSHOP_LOG; info prints a
 #                selectable status (or fails for the not-launched case);
 #                connections prints a selectable REAL row - four
-#                TAB-separated columns: secret, plug, slot, manual
+#                TAB-separated columns: secret, plug, slot, manual;
+#                connect can refuse exactly the openrouter-key plug
+#                (WORKSHOP_CONNECT_FAIL: the stale-definition instance)
+#                and exec can fail (WORKSHOP_EXEC_FAIL: a locked keyring
+#                or corrupt auth.json inside the instance) - the two
+#                degrade paths the real flow must survive
 #   uv           shim running the real sunbeam_workshop module with the
 #                system python via PYTHONPATH, exactly like the setup suite
 # The fixture also carries profiles/fixture/ + an empty config/ so the vars
@@ -126,7 +131,21 @@ case "${1:-}" in
         exit 0
         ;;
     connect | exec)
-        # The tests assert the exact logged argv of these calls.
+        # The tests assert the exact logged argv of these calls. Selectable
+        # failures model the two degrade paths the flow must survive:
+        # WORKSHOP_CONNECT_FAIL refuses exactly the openrouter-key connect
+        # (a stale-definition instance - the platform has no such plug),
+        # WORKSHOP_EXEC_FAIL fails the converger exec (locked keyring /
+        # corrupt auth.json inside the instance).
+        if [ "$1" = "connect" ] && [ -n "${WORKSHOP_CONNECT_FAIL:-}" ] \
+            && [[ "$*" == *openrouter-key* ]]; then
+            echo "error: cannot resolve connection: SDK has no plug named openrouter-key" >&2
+            exit 1
+        fi
+        if [ "$1" = "exec" ] && [ -n "${WORKSHOP_EXEC_FAIL:-}" ]; then
+            echo "workshopctl get-secret: the host keyring is locked" >&2
+            exit 1
+        fi
         exit 0
         ;;
     *)
@@ -305,6 +324,58 @@ test_stopped_connects_but_skips_converger() (
     fi
 )
 
+test_converger_failure_degrades() (
+    local root output status log
+    root=$(new_root); make_fixture "${root}"
+    printf '%s\n' "${OR_KEY}" > "${root}/stdin.txt"
+    set +e
+    output=$(WORKSHOP_STATUS=Ready WORKSHOP_EXEC_FAIL=1 \
+        run_secret "${root}" "${root}/stdin.txt" fixture 2> "${root}/stderr.txt")
+    status=$?
+    set -e
+    log="${root}/workshop.log"
+    [[ ${status} -eq 0 ]] \
+        || fail "a failed converger must not abort the flow, got exit ${status}: ${output}"
+    grep -qF "workshop connect fixture/fixture-tools:openrouter-key fixture/system:openrouter-key" "${log}" \
+        || fail "the openrouter connect must still run before the converger: $(cat "${log}")"
+    grep -q "workshop exec fixture" "${log}" \
+        || fail "the converger exec was not attempted: $(cat "${log}")"
+    grep -q "WARNING: the opencode auth converger failed inside 'fixture'" "${root}/stderr.txt" \
+        || fail "the converger failure was not reported as a warning: $(cat "${root}/stderr.txt")"
+    grep -q "authenticate-opencode" "${root}/stderr.txt" \
+        || fail "the troubleshooting pointer was missing: $(cat "${root}/stderr.txt")"
+    if grep -q "Converged the opencode auth" <<<"${output}"; then
+        fail "a converger success note was printed despite the failure: ${output}"
+    fi
+)
+
+test_openrouter_connect_refusal_degrades() (
+    local root output status log
+    root=$(new_root); make_fixture "${root}"
+    printf '%s\n' "${OR_KEY}" > "${root}/stdin.txt"
+    set +e
+    output=$(WORKSHOP_STATUS=Ready WORKSHOP_CONNECT_FAIL=1 \
+        run_secret "${root}" "${root}/stdin.txt" fixture 2> "${root}/stderr.txt")
+    status=$?
+    set -e
+    log="${root}/workshop.log"
+    [[ ${status} -eq 0 ]] \
+        || fail "a refused openrouter connect must not abort the flow, got exit ${status}: ${output}"
+    grep -qF "workshop connect fixture/gh-cli:github-token fixture/system:github-token" "${log}" \
+        || fail "the mandatory github connect was skipped by the degradation: $(cat "${log}")"
+    grep -qF "workshop connect fixture/fixture-tools:openrouter-key fixture/system:openrouter-key" "${log}" \
+        || fail "the refused openrouter connect was not attempted: $(cat "${log}")"
+    grep -q "WARNING: could not connect fixture/fixture-tools:openrouter-key to fixture/system:openrouter-key" "${root}/stderr.txt" \
+        || fail "the connect refusal was not reported as a warning: $(cat "${root}/stderr.txt")"
+    grep -q "older definition without the" "${root}/stderr.txt" \
+        || fail "the stale-instance cause was not explained: $(cat "${root}/stderr.txt")"
+    grep -q "workshop refresh fixture" "${root}/stderr.txt" \
+        || fail "the refresh recovery was not offered: $(cat "${root}/stderr.txt")"
+    if grep -q "workshop exec" "${log}"; then
+        fail "the converger ran despite the refused connect: $(cat "${log}")"
+    fi
+)
+
 test_in_container_refusal() (
     local root output status
     root=$(new_root); make_fixture "${root}"
@@ -333,5 +404,7 @@ test_not_launched_skips_wiring_and_converger
 test_ready_wires_stripped_names_and_converges
 test_existing_row_skips_reconnect_converger_runs
 test_stopped_connects_but_skips_converger
+test_converger_failure_degrades
+test_openrouter_connect_refusal_degrades
 test_in_container_refusal
 echo "secret-setup tests passed."
