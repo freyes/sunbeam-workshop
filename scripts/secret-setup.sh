@@ -29,13 +29,17 @@
 #      NAME/system:github-token`, skipped with a clear note when the
 #      instance is not launched yet (guided setup runs this script before
 #      `workshop launch`; it re-runs it after the instance is Ready).
-#   3b. openrouter wiring + converger: resolve the instance's profile via
-#      the vars module (the same invocation scripts/render.sh uses),
-#      idempotently connect NAME/<profile>-tools:openrouter-key to
-#      NAME/system:openrouter-key (RUNTIME sdk name - the platform strips
-#      the `project-` prefix and connection refs reject it), and when the
-#      instance reports Ready run the shared writer inside it via
-#      `workshop exec` to converge ~/.local/share/opencode/auth.json.
+#   3b. openrouter wiring + converger (BEST-EFFORT: the key is optional):
+#      resolve the instance's profile via the vars module (the same
+#      invocation scripts/render.sh uses), idempotently connect
+#      NAME/<profile>-tools:openrouter-key to NAME/system:openrouter-key
+#      (RUNTIME sdk name - the platform strips the `project-` prefix and
+#      connection refs reject it), and when the instance reports Ready run
+#      the shared writer inside it via `workshop exec` to converge
+#      ~/.local/share/opencode/auth.json. No failure in this lane aborts
+#      the run: an unconnectable plug - an instance launched from an
+#      older definition predating the openrouter lane - or a failed
+#      converger warns with the recovery and continues.
 #
 # THE GITHUB_TOKEN TRAP (ck8s-dev AGENTS.md rules 10-11):
 #   * GITHUB_TOKEN and GH_TOKEN must NEVER be exported in the host shell or
@@ -178,8 +182,16 @@ fi
 # --- 3b. openrouter plug wiring + post-Ready converger --------------------
 # The openrouter secret plug never auto-connects (secret plugs are
 # manual-only upstream), so wire it here and converge the opencode auth
-# inside a Ready instance. Every step degrades gracefully: an
-# unresolvable profile or a not-yet-Ready instance skips with a note.
+# inside a Ready instance. The whole lane is BEST-EFFORT: the OpenRouter
+# key is optional (step 1b skips), so no failure below may abort the
+# guided setup. Every step degrades gracefully: an unresolvable profile
+# or a not-yet-Ready instance skips with a note, an unconnectable plug or
+# a failed converger warns with the recovery. The classic unconnectable
+# case: the instance was launched from an older definition without the
+# openrouter-key plug (the lane postdates the instance), so the platform
+# refuses the connect with "SDK has no plug named openrouter-key" until
+# the instance runs the current rendered definition (workshop refresh, or
+# just remove + just setup for a fresh launch).
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 profile="$( cd "$script_dir/.." && uv run --frozen --project "$script_dir" python -m sunbeam_workshop vars "$name" 2>/dev/null | jq -r '.profile // empty' )" || profile=""
 if [ -z "$profile" ] || ! [[ "$profile" =~ ^[a-z0-9-]+$ ]]; then
@@ -193,9 +205,17 @@ or_slot="$name/system:openrouter-key"
 
 if workshop connections "$name" 2>/dev/null | grep -qE "^[[:space:]]*secret[[:space:]]+${or_plug}[[:space:]]+${or_slot}[[:space:]]"; then
     echo "✓ $or_plug already connected to $or_slot."
-else
-    workshop connect "$or_plug" "$or_slot"
+elif workshop connect "$or_plug" "$or_slot"; then
     echo "✓ Connected $or_plug to $or_slot."
+else
+    echo "WARNING: could not connect $or_plug to $or_slot." >&2
+    echo "         The instance was likely launched from an older definition without the" >&2
+    echo "         openrouter-key plug (the openrouter lane postdates it); opencode stays" >&2
+    echo "         unauthenticated inside '$name' until the instance runs the current rendered definition." >&2
+    echo "         Recover: 'workshop refresh $name' (re-provisions from the current render," >&2
+    echo "         discards the container writable layer), or 'just remove $name' then" >&2
+    echo "         'just setup $name' for a fresh launch - then re-run 'just secret-setup $name'." >&2
+    exit 0
 fi
 
 # The writer needs a live instance: converge only when Ready (the status
@@ -205,8 +225,14 @@ status="${status#\"}"
 status="${status%\"}"
 case "$status" in
     [rR]eady)
-        workshop exec "$name" -- bash -c "set -euo pipefail; . /project/scripts/hooks/lib-common.sh && write_opencode_auth ${profile}-tools.openrouter-key"
-        echo "✓ Converged the opencode auth inside '$name' (auth.json re-derived from the openrouter secret)."
+        if workshop exec "$name" -- bash -c "set -euo pipefail; . /project/scripts/hooks/lib-common.sh && write_opencode_auth ${profile}-tools.openrouter-key"; then
+            echo "✓ Converged the opencode auth inside '$name' (auth.json re-derived from the openrouter secret)."
+        else
+            echo "WARNING: the opencode auth converger failed inside '$name'; auth.json was not re-derived." >&2
+            echo "         See docs/how-to/authenticate-opencode.rst (Troubleshooting): a locked host keyring or" >&2
+            echo "         a corrupt auth.json is repaired there. The OpenRouter key is optional - the workshop" >&2
+            echo "         stays Ready and healthy without opencode auth; re-run 'just secret-setup $name' after the fix." >&2
+        fi
         ;;
     *)
         echo "⊘ Workshop '$name' is '${status:-not reporting a status yet}';"
