@@ -139,6 +139,17 @@ during the launch change - the writer warns and the workshop builds Ready
 without opencode auth. Run ``just secret-setup <name>`` once the instance
 exists to wire the plug and converge the auth file.
 
+**"SDK has no plug named" when wiring the plug.**
+The instance was launched from an older definition that predates the
+openrouter lane. ``workshop connect`` resolves plugs against the
+definition the instance was launched from - not the current render - and
+re-rendering alone never updates a launched instance. ``just setup``
+warns and continues: the OpenRouter key is optional, and the mandatory
+GitHub wiring is unaffected. Bring the instance onto the current render
+with ``workshop refresh <name>``, or ``just remove <name>`` and
+``just setup <name>`` for a fresh launch, then re-run
+``just secret-setup <name>`` to wire the plug and converge the auth.
+
 **The instance reports an error with** ``corrupt-opencode-auth``.
 ``auth.json`` exists but is not valid opencode auth JSON. Delete it, then
 re-converge: re-run ``just secret-setup <name>`` if the instance still
