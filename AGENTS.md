@@ -1,4 +1,4 @@
-# sunbeam-workshop Agent Instructions
+# openstack-workshop Agent Instructions
 
 > **AGENTS MUST update this file whenever they make changes that affect the
 > project structure, workflows, Justfile targets, profiles, hooks, or any
@@ -8,7 +8,7 @@
 
 ## Overview
 
-This repository (`sunbeam-workshop`) turns a fresh Ubuntu 24.04+ amd64 host
+This repository (`openstack-workshop`) turns a fresh Ubuntu 24.04+ amd64 host
 into named, isolated OpenStack development workshops: LXD containers launched
 by the Workshop snap from rendered definitions under `.workshop/`. Profiles
 are data, not code - a jinja2 template plus variables per profile - so new
@@ -91,7 +91,7 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
   qa/host/sdk-gate.sh    The D-19 host-side SDK verification gate.
   tests/                 Shell suites (discovered live by run.sh) + pytest.
   tests/golden/          Pinned golden render baselines for the six matrix names.
-  sunbeam_workshop/      Python package: name resolution + vars doc (vars.py),
+  openstack_workshop/      Python package: name resolution + vars doc (vars.py),
                          config layer merge (config.py), repo manager (repos.py).
 docs/                  The sphinx-stack docs site (D-16/D-17): reST pages in
                        the four Diataxis quadrants (tutorial/, how-to/,
@@ -247,11 +247,11 @@ All agents operating in this repo MUST obey the following invariants.
 - **Rule**: credentials never live in the repo, the rendered yaml, a
   template, or a docs example. The GitHub token is stored in the HOST
   keyring by `just secret-setup` (`scripts/secret-setup.sh`, service
-  `sunbeam-workshop-github-token`); the rendered `system:github-token`
+  `openstack-workshop-github-token`); the rendered `system:github-token`
   secret slot carries keyring LOOKUP attributes (`service: "gh:github.com"`,
   `username: ""`), never the value. The optional OpenRouter key is stored
   the same way under the host-keyring service
-  `sunbeam-workshop-openrouter-key`, and the rendered `system:openrouter-key`
+  `openstack-workshop-openrouter-key`, and the rendered `system:openrouter-key`
   slot likewise carries lookup attributes, never the value. `.state/`
   (mode 0700) and `.openchamber-password` are gitignored.
 - **CRITICAL TRAP**: `GITHUB_TOKEN` and `GH_TOKEN` MUST NEVER be exported in

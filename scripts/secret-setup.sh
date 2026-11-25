@@ -14,10 +14,10 @@
 #
 # Flow:
 #   1. keyring: the PAT is stored once under
-#      `secret-tool store service sunbeam-workshop-github-token` and looked
+#      `secret-tool store service openstack-workshop-github-token` and looked
 #      up from there on every re-run (idempotent repair).
 #   1b. keyring (optional): the OpenRouter key is stored once under
-#      `secret-tool store service sunbeam-workshop-openrouter-key`; the
+#      `secret-tool store service openstack-workshop-openrouter-key`; the
 #      prompt is skippable - empty input warns and CONTINUES (owner
 #      decision: the key is optional; opencode stays unauthenticated until
 #      one is stored).
@@ -57,10 +57,10 @@
 # user has passwordless sudo there) unless I_KNOW_WHAT_IM_DOING=1.
 set -euo pipefail
 
-SERVICE="sunbeam-workshop-github-token"
-LABEL="GitHub Personal Access Token (sunbeam-workshop)"
-OR_SERVICE="sunbeam-workshop-openrouter-key"
-OR_LABEL="OpenRouter API Key (sunbeam-workshop)"
+SERVICE="openstack-workshop-github-token"
+LABEL="GitHub Personal Access Token (openstack-workshop)"
+OR_SERVICE="openstack-workshop-openrouter-key"
+OR_LABEL="OpenRouter API Key (openstack-workshop)"
 
 # --- in-container refusal (mirrors the Justfile assert-host guard) ---
 if [ "${I_KNOW_WHAT_IM_DOING:-0}" != "1" ] && [ "${USER:-}" = "workshop" ]; then
@@ -79,7 +79,7 @@ if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ] || [ $# -gt 1 ]; then
 fi
 name="${1:-}"
 
-# Workshop instance names are schema-bounded (scripts/sunbeam_workshop/vars.py).
+# Workshop instance names are schema-bounded (scripts/openstack_workshop/vars.py).
 if [ -n "$name" ] && { [ "${#name}" -gt 40 ] || ! [[ "$name" =~ ^[a-z](-?[a-z0-9])*$ ]]; }; then
     echo "ERROR: invalid instance name '$name' (want ^[a-z](-?[a-z0-9])*$, max 40 chars)." >&2
     exit 2
@@ -193,7 +193,7 @@ fi
 # the instance runs the current rendered definition (workshop refresh, or
 # just remove + just setup for a fresh launch).
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-profile="$( cd "$script_dir/.." && uv run --frozen --project "$script_dir" python -m sunbeam_workshop vars "$name" 2>/dev/null | jq -r '.profile // empty' )" || profile=""
+profile="$( cd "$script_dir/.." && uv run --frozen --project "$script_dir" python -m openstack_workshop vars "$name" 2>/dev/null | jq -r '.profile // empty' )" || profile=""
 if [ -z "$profile" ] || ! [[ "$profile" =~ ^[a-z0-9-]+$ ]]; then
     echo "WARNING: could not resolve the profile of '$name' via the vars module;" >&2
     echo "         skipping the openrouter plug wiring and the opencode auth converger." >&2

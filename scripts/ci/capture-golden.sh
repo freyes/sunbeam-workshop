@@ -17,7 +17,7 @@ set -euo pipefail
 # Forward-compat: the user-vars layer discovery kill-switch lands in a later
 # phase of the user-level-customization work; exporting it today is harmless
 # and keeps captures hermetic once dev machines can carry user layers.
-export SUNBEAM_WORKSHOP_NO_USER_LAYERS=1
+export OPENSTACK_WORKSHOP_NO_USER_LAYERS=1
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
 ROOT="$(cd -- "${SCRIPT_DIR}/../.." >/dev/null 2>&1 && pwd -P)"

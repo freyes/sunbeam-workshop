@@ -40,7 +40,7 @@ run_step "install_uv_pythons 3.10 3.12" install_uv_pythons 3.10 3.12
 # the venv is rebuilt only when the requirements file changes.
 run_step "build_tox_venv" build_tox_venv \
     "$hook_dir/tox-requirements.txt" \
-    "$HOME/.local/share/sunbeam-workshop/tox-venv"
+    "$HOME/.local/share/openstack-workshop/tox-venv"
 
 # Gerrit identity (draft D-6).
 if [ -n "$vars_doc" ]; then

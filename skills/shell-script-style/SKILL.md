@@ -17,7 +17,7 @@ description: Use when writing or editing any shell in this repo - scripts/*.sh, 
 
 - **Shell lives in script files, not inline** (D-12). Just recipes are thin
   dispatchers (`exec bash scripts/<name>.sh ...`); logic lives in the script.
-  Python (uv-managed, `scripts/sunbeam_workshop/`) is preferred for
+  Python (uv-managed, `scripts/openstack_workshop/`) is preferred for
   repo/config tooling where a choice exists (IS-9).
 - Every script starts with `#!/usr/bin/env bash` and `set -euo pipefail`,
   and carries the Canonical copyright header like its neighbors.
@@ -54,7 +54,7 @@ description: Use when writing or editing any shell in this repo - scripts/*.sh, 
 
 - Shell suites live in `scripts/tests/*.sh` and are discovered live by
   `scripts/tests/run.sh` (`just test`); a new suite is picked up without
-  editing the runner. Use fixture roots via `SUNBEAM_WORKSHOP_ROOT` overrides
+  editing the runner. Use fixture roots via `OPENSTACK_WORKSHOP_ROOT` overrides
   and `mktemp` dirs; never test against the real tree's state.
 - Python unit tests sit beside the package (`scripts/tests/test_*.py`) and
   run via `cd scripts && uv run --frozen pytest -q` (the CI `python-tests`

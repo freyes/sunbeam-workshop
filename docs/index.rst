@@ -1,5 +1,5 @@
-sunbeam-workshop
-================
+openstack-workshop
+==================
 
 A starter repository that turns a fresh Ubuntu machine into a named, isolated
 OpenStack development workshop - with ready profiles for sunbeam, classic

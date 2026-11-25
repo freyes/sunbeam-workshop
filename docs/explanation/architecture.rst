@@ -3,7 +3,7 @@
 Architecture
 ============
 
-sunbeam-workshop turns one Ubuntu host into any number of named, isolated
+openstack-workshop turns one Ubuntu host into any number of named, isolated
 OpenStack development environments. This page explains the three layers the
 system spans, how profiles become running workshops, how the SDK chain is
 composed, how credentials flow without ever entering the repository, and

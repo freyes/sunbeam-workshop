@@ -19,7 +19,7 @@
 #                and exec can fail (WORKSHOP_EXEC_FAIL: a locked keyring
 #                or corrupt auth.json inside the instance) - the two
 #                degrade paths the real flow must survive
-#   uv           shim running the real sunbeam_workshop module with the
+#   uv           shim running the real openstack_workshop module with the
 #                system python via PYTHONPATH, exactly like the setup suite
 # The fixture also carries profiles/fixture/ + an empty config/ so the vars
 # module resolves the instance's profile against the fixture root.
@@ -29,8 +29,8 @@ TEST_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 PROJECT_DIR=$(cd "${TEST_DIR}/../.." && pwd)
 SECRET_SETUP="${PROJECT_DIR}/scripts/secret-setup.sh"
 
-GH_SERVICE="sunbeam-workshop-github-token"
-OR_SERVICE="sunbeam-workshop-openrouter-key"
+GH_SERVICE="openstack-workshop-github-token"
+OR_SERVICE="openstack-workshop-openrouter-key"
 GH_SEED="gh-stub-token-abc123"
 OR_KEY="or-stub-key-xyz789"
 OR_KEYLINE="${OR_SERVICE}=${OR_KEY}"

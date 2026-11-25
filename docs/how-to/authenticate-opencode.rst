@@ -14,10 +14,10 @@ How the flow works
 The key never lives in the workshop definition. Instead:
 
 1. ``just secret-setup`` stores your OpenRouter key in the **host keyring**
-   (service ``sunbeam-workshop-openrouter-key``).
+   (service ``openstack-workshop-openrouter-key``).
 2. The rendered workshop definition declares a ``system:openrouter-key``
    secret slot carrying keyring **lookup attributes** - service
-   ``sunbeam-workshop-openrouter-key`` - never the key value.
+   ``openstack-workshop-openrouter-key`` - never the key value.
 3. ``workshop connect <name>/<profile>-tools:openrouter-key
    <name>/system:openrouter-key`` wires the instance's openrouter plug to
    that slot. Secret plugs never auto-connect: the connection is manual,
@@ -58,7 +58,7 @@ workshop container. It:
   OpenRouter key (also hidden) - the key is never printed and reaches the
   keyring only through a stdin pipe;
 - stores the key in the host keyring under service
-  ``sunbeam-workshop-openrouter-key``, or reports the existing entry.
+  ``openstack-workshop-openrouter-key``, or reports the existing entry.
 
 .. note::
 
@@ -104,7 +104,7 @@ To replace a stored key:
 
 .. code-block:: sh
 
-   secret-tool clear service sunbeam-workshop-openrouter-key
+   secret-tool clear service openstack-workshop-openrouter-key
    just secret-setup
    just secret-setup sunbeam
 
@@ -159,7 +159,7 @@ the connected secret. An **absent** ``auth.json`` is never a failure: it
 is the expected state when no key is stored yet.
 
 **"multiple keyring items match".**
-The slot looks up service ``sunbeam-workshop-openrouter-key``; duplicate
+The slot looks up service ``openstack-workshop-openrouter-key``; duplicate
 items make the lookup ambiguous. Run
-``secret-tool clear service sunbeam-workshop-openrouter-key``, re-run
+``secret-tool clear service openstack-workshop-openrouter-key``, re-run
 ``just secret-setup``, then ``just secret-setup <name>``.

@@ -5,7 +5,7 @@
 # The REAL setup.sh runs from a fixture tree: stub doctor/render/secret-setup
 # scripts sit beside it, and stub `workshop`/`uv` binaries go on PATH, so the
 # pre-launch status case and the final hints are exercised without touching
-# the host. The uv shim runs the real sunbeam_workshop module with the system
+# the host. The uv shim runs the real openstack_workshop module with the system
 # python (PYTHONPATH), exactly like the render.sh suite's fixture pattern.
 set -euo pipefail
 

@@ -1,4 +1,4 @@
-"""CLI entry point: ``python -m sunbeam_workshop vars|repos ...``."""
+"""CLI entry point: ``python -m openstack_workshop vars|repos ...``."""
 from __future__ import annotations
 
 import argparse
@@ -16,7 +16,7 @@ def main(argv: list[str] | None = None) -> int:
         from . import repos
 
         return repos.main(argv[1:])
-    parser = argparse.ArgumentParser(prog="sunbeam_workshop")
+    parser = argparse.ArgumentParser(prog="openstack_workshop")
     subparsers = parser.add_subparsers(dest="command", required=True)
     vars_parser = subparsers.add_parser(
         "vars", help="emit the merged vars doc for workshop NAME as JSON"

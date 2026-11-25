@@ -60,7 +60,7 @@ run_remove() {
     local root=$1 name=$2
     env PATH="${root}/bin:${PATH}" \
         WORKSHOP_LOG="${root}/workshop.log" \
-        SUNBEAM_WORKSHOP_ROOT="${root}" \
+        OPENSTACK_WORKSHOP_ROOT="${root}" \
         bash "${REMOVE}" "${name}"
 }
 

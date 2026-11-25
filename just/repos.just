@@ -13,6 +13,6 @@ repos profile="" *args: assert-host
     profile="{{profile}}"
     cd "{{justfile_directory()}}/scripts"
     if [ -n "$profile" ]; then
-        exec uv run --frozen python -m sunbeam_workshop repos apply "$profile" {{args}}
+        exec uv run --frozen python -m openstack_workshop repos apply "$profile" {{args}}
     fi
-    exec uv run --frozen python -m sunbeam_workshop repos apply {{args}}
+    exec uv run --frozen python -m openstack_workshop repos apply {{args}}

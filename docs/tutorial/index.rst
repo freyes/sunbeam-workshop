@@ -3,7 +3,7 @@
 Tutorials
 =========
 
-A hands-on introduction to sunbeam-workshop for new developers.
+A hands-on introduction to openstack-workshop for new developers.
 
 .. toctree::
    :maxdepth: 1

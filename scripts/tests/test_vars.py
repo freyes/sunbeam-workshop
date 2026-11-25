@@ -1,4 +1,4 @@
-"""Tests for sunbeam_workshop.config and sunbeam_workshop.vars.
+"""Tests for openstack_workshop.config and openstack_workshop.vars.
 
 All tests run against a fixture ROOT built under tmp_path - never the real
 profiles/ tree - and monkeypatch USER where identity matters.
@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
-from sunbeam_workshop.__main__ import main
-from sunbeam_workshop.config import deep_merge, load_config
-from sunbeam_workshop.vars import (
+from openstack_workshop.__main__ import main
+from openstack_workshop.config import deep_merge, load_config
+from openstack_workshop.vars import (
     InstanceCollisionError,
     InvalidNameError,
     UnknownProfileError,

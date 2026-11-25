@@ -57,7 +57,7 @@ name:
        openrouter-key:
          interface: secret
          attributes:
-           service: "sunbeam-workshop-openrouter-key"
+           service: "openstack-workshop-openrouter-key"
 
      plugs:
        mcp-oauth-callback:
@@ -95,7 +95,7 @@ The pieces:
    * - ``name`` / ``base``
      - The instance name and the base image (``ubuntu@26.04``).
    * - ``system`` slots
-     - Two **secret slots** naming host keyring items by lookup attributes, never the values: ``github-token`` (``service: "gh:github.com"``, ``username: ""`` for gh's current account) and ``openrouter-key`` (``service: "sunbeam-workshop-openrouter-key"``, the item ``just secret-setup`` stores).
+     - Two **secret slots** naming host keyring items by lookup attributes, never the values: ``github-token`` (``service: "gh:github.com"``, ``username: ""`` for gh's current account) and ``openrouter-key`` (``service: "openstack-workshop-openrouter-key"``, the item ``just secret-setup`` stores).
    * - ``system`` plugs
      - ``mcp-oauth-callback`` is a **tunnel plug** forwarding ``localhost:19876`` from the host so the Atlassian OAuth redirect reaches opencode inside the workshop.
    * - SDK chain

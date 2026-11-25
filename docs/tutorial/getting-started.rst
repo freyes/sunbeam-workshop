@@ -1,7 +1,7 @@
 .. _getting-started:
 
-Get started with sunbeam-workshop
-=================================
+Get started with openstack-workshop
+===================================
 
 This tutorial takes you from a fresh Ubuntu host to a running OpenStack
 development workshop. You will check the host prerequisites, run the guided

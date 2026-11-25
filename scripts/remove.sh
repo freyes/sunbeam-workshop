@@ -18,13 +18,13 @@
 #   3. every other failure (unknown NAME, LXD down, ...) propagates its
 #      output and exit code unchanged - nothing is masked or cleaned up
 #
-# SUNBEAM_WORKSHOP_ROOT overrides the repo root (the test-suite fixture
+# OPENSTACK_WORKSHOP_ROOT overrides the repo root (the test-suite fixture
 # roots use it; the definition path resolves under the overridden root).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
-ROOT="$(cd -- "${SUNBEAM_WORKSHOP_ROOT:-$SCRIPT_DIR/..}" >/dev/null 2>&1 && pwd -P)"
+ROOT="$(cd -- "${OPENSTACK_WORKSHOP_ROOT:-$SCRIPT_DIR/..}" >/dev/null 2>&1 && pwd -P)"
 
 if [ "${1:-}" = "" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
     echo "Usage: bash scripts/remove.sh NAME" >&2
