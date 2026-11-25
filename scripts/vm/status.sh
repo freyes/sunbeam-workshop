@@ -7,12 +7,12 @@
 #
 #   Usage: bash scripts/vm/status.sh      (usually via `just vm-status`)
 #
-# SUNBEAM_WORKSHOP_ROOT overrides the repo root (fixture tests use it).
+# OPENSTACK_WORKSHOP_ROOT overrides the repo root (fixture tests use it).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
-ROOT="$(cd -- "${SUNBEAM_WORKSHOP_ROOT:-$SCRIPT_DIR/../..}" >/dev/null 2>&1 && pwd -P)"
+ROOT="$(cd -- "${OPENSTACK_WORKSHOP_ROOT:-$SCRIPT_DIR/../..}" >/dev/null 2>&1 && pwd -P)"
 # shellcheck source=scripts/vm/lib-vm.sh
 source "$SCRIPT_DIR/lib-vm.sh"
 
@@ -68,7 +68,7 @@ fi
 if [ -f "$VM_FP_FILE" ]; then
     recorded="$(tr -d '[:space:]' < "$VM_FP_FILE")"
     live="$(lxc exec "$VM_NAME" -- lxc config trust list --format json \
-        | jq -r '.[] | select(.name=="sunbeam-workshop") | .fingerprint')"
+        | jq -r '.[] | select(.name=="openstack-workshop") | .fingerprint')"
     if [ "$recorded" = "$live" ]; then
         echo "✓ recorded trust fingerprint matches the VM's trust store"
     else

@@ -41,7 +41,7 @@ info() { printf 'ℹ %s\n' "$1"; }
 profile="${1:-}"
 TUTORIAL="https://ubuntu.com/workshop/docs/tutorial/part-1-get-started/"
 
-echo "Host prerequisites for sunbeam-workshop${profile:+ (profile: $profile)}:"
+echo "Host prerequisites for openstack-workshop${profile:+ (profile: $profile)}:"
 
 # --- Workshop snap (hard requirement) ---
 if ! command -v workshop >/dev/null 2>&1; then
@@ -89,7 +89,7 @@ if ! command -v secret-tool >/dev/null 2>&1; then
 else
     # Probe with a harmless lookup. The looked-up value (if any) goes to
     # /dev/null and is never read, stored, or printed.
-    probe_err="$(timeout 5 secret-tool lookup service sunbeam-workshop-probe 2>&1 >/dev/null)"
+    probe_err="$(timeout 5 secret-tool lookup service openstack-workshop-probe 2>&1 >/dev/null)"
     probe_rc=$?
     if [ "$probe_rc" -eq 124 ]; then
         warn "secret-tool probe timed out after 5s" \
@@ -200,8 +200,8 @@ if [ "$fails" -gt 0 ]; then
     exit 1
 fi
 if [ "$warns" -gt 0 ]; then
-    echo "✓ host can run sunbeam-workshop ($warns warning(s) above)"
+    echo "✓ host can run openstack-workshop ($warns warning(s) above)"
 else
-    echo "✓ host can run sunbeam-workshop"
+    echo "✓ host can run openstack-workshop"
 fi
 exit 0

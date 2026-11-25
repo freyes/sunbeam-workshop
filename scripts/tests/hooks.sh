@@ -14,7 +14,7 @@
 # lexical order, failure collection, subshell isolation, fail-soft via
 # run_step, non-.sh files ignored, missing/empty roots a silent no-op) and
 # run_once (first call records, second is skipped). Fixture roots live in
-# mktemp dirs via SUNBEAM_WORKSHOP_STATE_DIR, SUNBEAM_WORKSHOP_FRAGMENT_ROOT
+# mktemp dirs via OPENSTACK_WORKSHOP_STATE_DIR, OPENSTACK_WORKSHOP_FRAGMENT_ROOT
 # and XDG_STATE_HOME; the real tree's state is never touched.
 # The write_opencode_auth / check_opencode_auth contract is covered too:
 # PATH-stubbed workshopctl/systemctl fixtures (mktemp HOME, deterministic -
@@ -229,7 +229,7 @@ run_find_vars_doc() (
     set -euo pipefail
     # shellcheck disable=SC1090
     . "$LIB"
-    SUNBEAM_WORKSHOP_STATE_DIR="$1" find_vars_doc "$2"
+    OPENSTACK_WORKSHOP_STATE_DIR="$1" find_vars_doc "$2"
 )
 
 test_find_vars_doc_bare_name_hit() (
@@ -307,7 +307,7 @@ test_fragment_scope_and_lexical_order() (
     write_fragment "$root/all/setup-project.d/01-first.sh" "echo 01-first >> \"$log\""
     write_fragment "$root/fixture/setup-project.d/10-prof.sh" "echo 10-prof >> \"$log\""
     write_fragment "$root/$HOSTNAME_NOW/setup-project.d/05-inst.sh" "echo 05-inst >> \"$log\""
-    SUNBEAM_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>/dev/null
+    OPENSTACK_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>/dev/null
     got=$(paste -sd, "$log")
     [ "$got" = "01-first,02-second,10-prof,05-inst" ] \
         || fail "fragment order: got '$got', want '01-first,02-second,10-prof,05-inst'"
@@ -326,7 +326,7 @@ test_fragment_failure_collected() (
     write_fragment "$root/all/setup-project.d/zz-after.sh" "echo after > \"$root/after.marker\""
     err="$root/stderr.log"
     set +e
-    SUNBEAM_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>"$err"
+    OPENSTACK_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>"$err"
     status=$?
     set -e
     [ "$status" -eq 1 ] \
@@ -349,7 +349,7 @@ test_run_step_fail_soft_on_fragment_failure() (
     . "$LIB"
     root=$(make_frag_root)
     write_fragment "$root/all/setup-project.d/99-bad.sh" "exit 3"
-    SUNBEAM_WORKSHOP_FRAGMENT_ROOT="$root" \
+    OPENSTACK_WORKSHOP_FRAGMENT_ROOT="$root" \
         run_step "user fragments" run_user_fragments setup-project fixture 2>/dev/null \
         || fail "run_step must swallow a fragment failure (fail-soft), got non-zero"
 )
@@ -364,7 +364,7 @@ test_run_once_records_marker() (
     export XDG_STATE_HOME="$state"
     run_once my-marker \
         || fail "run_once first call must return 0"
-    [ -e "$state/sunbeam-workshop/run-once/my-marker" ] \
+    [ -e "$state/openstack-workshop/run-once/my-marker" ] \
         || fail "run_once did not record its marker"
     set +e
     run_once my-marker
@@ -383,7 +383,7 @@ test_non_sh_files_ignored() (
     root=$(make_frag_root)
     write_fragment "$root/all/setup-project.d/01-not-a-fragment.txt" "exit 9"
     write_fragment "$root/all/setup-project.d/README" "exit 9"
-    SUNBEAM_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>/dev/null \
+    OPENSTACK_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>/dev/null \
         || fail "non-.sh files must be ignored, got a failure"
 )
 
@@ -393,13 +393,13 @@ test_missing_fragment_root_is_noop() (
     set -euo pipefail
     # shellcheck disable=SC1090
     . "$LIB"
-    out=$(SUNBEAM_WORKSHOP_FRAGMENT_ROOT="${SUITE_TMP}/does-not-exist" run_user_fragments setup-project fixture 2>&1) \
+    out=$(OPENSTACK_WORKSHOP_FRAGMENT_ROOT="${SUITE_TMP}/does-not-exist" run_user_fragments setup-project fixture 2>&1) \
         || fail "missing fragment root: non-zero status, want a silent no-op"
     [ -z "$out" ] \
         || fail "missing fragment root: expected silence, got '$out'"
     root=$(make_frag_root)
     mkdir -p "$root/all/setup-project.d"
-    out=$(SUNBEAM_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>&1) \
+    out=$(OPENSTACK_WORKSHOP_FRAGMENT_ROOT="$root" run_user_fragments setup-project fixture 2>&1) \
         || fail "empty fragment dirs: non-zero status, want a silent no-op"
     [ -z "$out" ] \
         || fail "empty fragment dirs: expected silence, got '$out'"

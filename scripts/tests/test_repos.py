@@ -1,10 +1,10 @@
-"""Tests for sunbeam_workshop.repos.
+"""Tests for openstack_workshop.repos.
 
 All tests run against LOCAL git fixtures: bare remotes are initialised under
 tmp_path (no network), and ``gh`` / ``git-review`` are stubbed via PATH
 shims so the github and opendev code paths run offline. The fixture ROOT
 mirrors the repo layout (profiles/, config/repos/) and the clone root is
-redirected with SUNBEAM_WORKSHOP_GIT_ROOT.
+redirected with OPENSTACK_WORKSHOP_GIT_ROOT.
 """
 from __future__ import annotations
 
@@ -16,8 +16,8 @@ from pathlib import Path
 
 import pytest
 
-from sunbeam_workshop import repos
-from sunbeam_workshop.__main__ import main
+from openstack_workshop import repos
+from openstack_workshop.__main__ import main
 
 PROFILES = ("charmed", "packaging", "sunbeam")
 
@@ -82,7 +82,7 @@ def root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (root / "config" / "repos").mkdir(parents=True)
     (root / "git").mkdir()
     monkeypatch.setenv("USER", "alice")
-    monkeypatch.setenv("SUNBEAM_WORKSHOP_GIT_ROOT", str(root / "git"))
+    monkeypatch.setenv("OPENSTACK_WORKSHOP_GIT_ROOT", str(root / "git"))
     monkeypatch.setenv("GIT_AUTHOR_NAME", "Test")
     monkeypatch.setenv("GIT_AUTHOR_EMAIL", "test@example.com")
     monkeypatch.setenv("GIT_COMMITTER_NAME", "Test")
@@ -512,7 +512,7 @@ def test_git_root_defaults_to_checkout_git_dir(
     write_repo_config(
         root, "packaging", core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}]
     )
-    monkeypatch.delenv("SUNBEAM_WORKSHOP_GIT_ROOT")
+    monkeypatch.delenv("OPENSTACK_WORKSHOP_GIT_ROOT")
     assert main(["repos", "apply", "packaging"]) == 0
     clone = root / "git" / "keystone"
     assert (clone / ".git").is_dir()
@@ -521,9 +521,9 @@ def test_git_root_defaults_to_checkout_git_dir(
 def test_git_root_resolution_order(
     root: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.delenv("SUNBEAM_WORKSHOP_GIT_ROOT")
+    monkeypatch.delenv("OPENSTACK_WORKSHOP_GIT_ROOT")
     assert repos.resolve_git_root(None, root) == root / "git"
-    monkeypatch.setenv("SUNBEAM_WORKSHOP_GIT_ROOT", str(root / "custom"))
+    monkeypatch.setenv("OPENSTACK_WORKSHOP_GIT_ROOT", str(root / "custom"))
     assert repos.resolve_git_root(None, root) == root / "custom"
     assert repos.resolve_git_root(str(root / "flag"), root) == root / "flag"
 
@@ -538,7 +538,7 @@ def test_apply_unwritable_git_root_is_a_structured_error(
     )
     locked = root / "locked"
     locked.mkdir(mode=0o500)
-    monkeypatch.setenv("SUNBEAM_WORKSHOP_GIT_ROOT", str(locked / "git"))
+    monkeypatch.setenv("OPENSTACK_WORKSHOP_GIT_ROOT", str(locked / "git"))
     assert main(["repos", "apply", "packaging"]) == 1
     summary = read_summary(capsys)
     entry = summary["repos"][0]

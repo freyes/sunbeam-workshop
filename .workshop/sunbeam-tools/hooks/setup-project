@@ -25,7 +25,7 @@ run_step "install_uv_pythons 3.10 3.12" install_uv_pythons 3.10 3.12
 # ~/.local/bin; rebuilt only when the vendored requirements file changes.
 run_step "build_tox_venv" build_tox_venv \
     "$HOOK_DIR/tox-requirements.txt" \
-    "$HOME/.local/share/sunbeam-workshop/tox-venv"
+    "$HOME/.local/share/openstack-workshop/tox-venv"
 
 # Atlassian MCP server entry in the global opencode config (draft D-9).
 run_step "seed_atlassian_mcp" seed_atlassian_mcp

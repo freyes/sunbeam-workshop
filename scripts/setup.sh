@@ -102,7 +102,7 @@ wait_ready() {
     return 1
 }
 
-echo "sunbeam-workshop guided setup of '$name': $TOTAL_STEPS steps, each idempotent"
+echo "openstack-workshop guided setup of '$name': $TOTAL_STEPS steps, each idempotent"
 echo "and safe to re-run. SETUP_YES=1 takes every default."
 
 banner 1 "Host checks"
@@ -135,7 +135,7 @@ mkdir -p .state
 chmod 0700 .state
 vars_tmp=".state/.$name.vars.json.tmp"
 vars_file=".state/$name.vars.json"
-( cd scripts && uv run --frozen python -m sunbeam_workshop vars "$name" ) > "$vars_tmp"
+( cd scripts && uv run --frozen python -m openstack_workshop vars "$name" ) > "$vars_tmp"
 mv "$vars_tmp" "$vars_file"
 chmod 0600 "$vars_file"
 echo "✓ Wrote $vars_file"
@@ -176,7 +176,7 @@ bash scripts/secret-setup.sh "$name"
 # The repos hint names the resolved profile: first-dash truncation of the
 # instance name is wrong for dashed profile names, so resolve via the vars
 # module (longest-prefix).
-profile="$(cd scripts && uv run --frozen python -m sunbeam_workshop vars "$name" | jq -r .profile)"
+profile="$(cd scripts && uv run --frozen python -m openstack_workshop vars "$name" | jq -r .profile)"
 echo ""
 echo "════════════════════════════════════════════════════"
 echo "Setup complete - workshop '$name' is ready."

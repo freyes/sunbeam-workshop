@@ -6,7 +6,7 @@
 #   Usage: bash scripts/render.sh NAME     (NAME e.g. sunbeam, packaging-foo)
 #
 # Flow (draft decisions D-13, D-14):
-#   1. resolve NAME -> (profile, suffix) via the sunbeam_workshop vars module;
+#   1. resolve NAME -> (profile, suffix) via the openstack_workshop vars module;
 #      its exit codes are the render contract and propagate unchanged:
 #      3 unknown profile prefix (lists valid profiles), 4 invalid workshop
 #      name, 5 .workshop/ directory collision
@@ -21,15 +21,15 @@
 #
 # Re-rendering the same NAME overwrites deterministically (idempotent).
 #
-# SUNBEAM_WORKSHOP_ROOT overrides the repo root (the test suite uses it to
+# OPENSTACK_WORKSHOP_ROOT overrides the repo root (the test suite uses it to
 # render fixture profiles from a mktemp ROOT). The vars module discovers the
-# root from the current directory (sunbeam_workshop.vars.find_root), so it is
+# root from the current directory (openstack_workshop.vars.find_root), so it is
 # invoked with the root as its cwd.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
-ROOT="$(cd -- "${SUNBEAM_WORKSHOP_ROOT:-$SCRIPT_DIR/..}" >/dev/null 2>&1 && pwd -P)"
+ROOT="$(cd -- "${OPENSTACK_WORKSHOP_ROOT:-$SCRIPT_DIR/..}" >/dev/null 2>&1 && pwd -P)"
 
 if [ "${1:-}" = "" ] || [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
     echo "Usage: bash scripts/render.sh NAME" >&2
@@ -50,7 +50,7 @@ trap cleanup EXIT
 # 1+2. Resolve NAME and capture the merged vars doc in a fresh temp file.
 VARS_TMP="$(mktemp --suffix=.json)"
 status=0
-( cd "$ROOT" && uv run --frozen --project "$SCRIPT_DIR" python -m sunbeam_workshop vars "$name" ) > "$VARS_TMP" || status=$?
+( cd "$ROOT" && uv run --frozen --project "$SCRIPT_DIR" python -m openstack_workshop vars "$name" ) > "$VARS_TMP" || status=$?
 if [ "$status" -ne 0 ]; then
     exit "$status"
 fi

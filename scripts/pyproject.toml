@@ -1,7 +1,7 @@
 [project]
-name = "sunbeam-workshop"
+name = "openstack-workshop"
 version = "0.1.0"
-description = "Config layer merge and workshop vars-builder tooling for the sunbeam-workshop repo."
+description = "Config layer merge and workshop vars-builder tooling for the openstack-workshop repo."
 requires-python = ">=3.12"
 dependencies = [
     "jinja2-cli==1.0.1",
@@ -19,7 +19,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["sunbeam_workshop"]
+packages = ["openstack_workshop"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

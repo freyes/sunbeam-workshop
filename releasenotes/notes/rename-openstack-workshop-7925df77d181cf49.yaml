@@ -1,0 +1,28 @@
+---
+upgrade:
+  - |
+    The project is renamed from ``sunbeam-workshop`` to ``openstack-workshop``.
+    A fresh ``just setup <name>`` is unaffected; hosts that ran the previous
+    name should mind the renames below.
+  - |
+    The host-keyring service names move with the project name: the GitHub
+    token is now stored under ``openstack-workshop-github-token`` and the
+    OpenRouter key under ``openstack-workshop-openrouter-key``. Re-run
+    ``just secret-setup`` to store both items under the new names, then
+    clear the stale entries with ``secret-tool clear service
+    sunbeam-workshop-github-token`` and ``secret-tool clear service
+    sunbeam-workshop-openrouter-key``.
+  - |
+    A sunbeam sidecar VM created before the rename carries its LXD trust
+    certificate under the old ``sunbeam-workshop`` token name. Teardown is
+    unaffected - ``just vm-destroy`` revokes by the fingerprint recorded in
+    ``.state/vm/`` - but ``just vm-status`` will not match the old name.
+    Recreate the VM (``just vm-destroy`` then ``just vm-create``) to return
+    it to the new name.
+  - |
+    Per-user tooling state moves with the project name
+    (``~/.local/share/openstack-workshop/tox-venv`` and
+    ``~/.local/state/openstack-workshop/run-once``). The next setup run
+    rebuilds the tox venv and re-runs the once-only markers under the new
+    paths; the stale ``~/.local/share/sunbeam-workshop`` and
+    ``~/.local/state/sunbeam-workshop`` trees can be removed.

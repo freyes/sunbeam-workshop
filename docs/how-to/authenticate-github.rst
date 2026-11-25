@@ -13,7 +13,7 @@ How the flow works
 The credential never lives in the workshop definition. Instead:
 
 1. ``just secret-setup`` stores your personal access token in the **host
-   keyring** (service ``sunbeam-workshop-github-token``).
+   keyring** (service ``openstack-workshop-github-token``).
 2. It logs the host ``gh`` in with that token
    (``gh auth login --with-token``), because the rendered secret slot
    reads ``gh``'s own keyring login.
@@ -56,7 +56,7 @@ workshop container. It:
   never printed, and reaches the keyring and ``gh`` only through stdin
   pipes;
 - stores it in the host keyring under service
-  ``sunbeam-workshop-github-token``, or reports the existing entry;
+  ``openstack-workshop-github-token``, or reports the existing entry;
 - runs ``gh auth login --with-token`` if the host ``gh`` is not
   authenticated yet.
 
@@ -64,7 +64,7 @@ Re-running is idempotent. To replace a stored token:
 
 .. code-block:: sh
 
-   secret-tool clear service sunbeam-workshop-github-token
+   secret-tool clear service openstack-workshop-github-token
    just secret-setup
 
 Wire a workshop instance

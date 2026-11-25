@@ -35,7 +35,7 @@ A profile is four pieces:
   instance dir fails with exit 5 - UNLESS a profile dir shadows it, in which
   case resolution succeeds with `shadow_warning=True` and render prints the
   warning.
-- The merged vars doc (`scripts/sunbeam_workshop/vars.py build_vars`)
+- The merged vars doc (`scripts/openstack_workshop/vars.py build_vars`)
   contains: `workshop_name`, `profile`, `suffix`, `shadow_warning`,
   `profile_vars` (the profile's `vars.json`), `config` (deep-merge of
   `config/config.json` < `config/local.json` < `config/<user>/config.json`;
@@ -54,7 +54,7 @@ broken. Include order is the contract (copy the existing templates exactly):
    `- name: system` entry carrying TWO secret slots, `github-token` and
    `openrouter-key`, both keyring LOOKUP attributes only, never a value
    (`github-token`: `service: "gh:github.com"`, `username: ""`;
-   `openrouter-key`: `service: "sunbeam-workshop-openrouter-key"`).
+   `openrouter-key`: `service: "openstack-workshop-openrouter-key"`).
 2. `{% set oauth_tunnel_part = 'plug' %}` then include
    `partials/oauth-tunnel.yaml.j2` - nests the `mcp-oauth-callback` tunnel
    plug (endpoint `localhost:19876`) under that same system entry.

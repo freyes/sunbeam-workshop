@@ -3,7 +3,7 @@
 #
 # Suite for scripts/vm/{create,destroy}.sh (awesome-multirepo scripts/tests
 # pattern). Destroy-path tests run against a FIXTURE root in mktemp, selected
-# via SUNBEAM_WORKSHOP_ROOT, with lxc replaced by a stub that logs every call
+# via OPENSTACK_WORKSHOP_ROOT, with lxc replaced by a stub that logs every call
 # - the suite never touches the real config/vm.json, .state/, or a real LXD.
 # The cloud-init render tests use the REAL template with a fixture vars doc.
 set -euo pipefail
@@ -92,7 +92,7 @@ run_destroy() {
     shift 2
     log="${root}/lxc-stub.log"
     set +e
-    LAST_OUT=$(env PATH="${stubbin}:${SAFE_PATH}" SUNBEAM_WORKSHOP_ROOT="${root}" \
+    LAST_OUT=$(env PATH="${stubbin}:${SAFE_PATH}" OPENSTACK_WORKSHOP_ROOT="${root}" \
         I_KNOW_WHAT_IM_DOING=1 LXC_STUB_LOG="${log}" "$@" bash "${DESTROY}" </dev/null 2>&1)
     LAST_RC=$?
     set -e
@@ -102,7 +102,7 @@ run_create() {
     local root=$1
     shift
     set +e
-    LAST_OUT=$(env SUNBEAM_WORKSHOP_ROOT="${root}" "$@" bash "${CREATE}" </dev/null 2>&1)
+    LAST_OUT=$(env OPENSTACK_WORKSHOP_ROOT="${root}" "$@" bash "${CREATE}" </dev/null 2>&1)
     LAST_RC=$?
     set -e
 }

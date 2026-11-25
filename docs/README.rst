@@ -2,7 +2,7 @@ Documentation
 =============
 
 This directory contains the ``sphinx-stack`` documentation site for
-sunbeam-workshop. The site is built and checked only - it is never
+openstack-workshop. The site is built and checked only - it is never
 published.
 
 Build and check locally

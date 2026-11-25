@@ -16,7 +16,7 @@ Per forge:
 
 All clones live under ``<checkout>/git/<repo>`` - the ``git/`` directory of
 the repo checkout, which is ``/project/git`` inside the workshop container
-(A-7) - overridable with ``--git-root`` or ``SUNBEAM_WORKSHOP_GIT_ROOT``
+(A-7) - overridable with ``--git-root`` or ``OPENSTACK_WORKSHOP_GIT_ROOT``
 (tests use local fixtures).
 Existing clones are fetched and fast-forwarded, never re-cloned; dirty
 clones are reported and left completely untouched (never reset). Cloning is
@@ -47,7 +47,7 @@ CLONE_TIMEOUT = 900
 FETCH_TIMEOUT = 600
 OP_TIMEOUT = 60
 DEFAULT_GIT_DIR = "git"
-GIT_ROOT_ENV = "SUNBEAM_WORKSHOP_GIT_ROOT"
+GIT_ROOT_ENV = "OPENSTACK_WORKSHOP_GIT_ROOT"
 
 # Repo directory names double as paths under the git root: keep them boring.
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -60,7 +60,7 @@ class ReposError(Exception):
 
 
 def resolve_git_root(cli_value: str | None, root: Path) -> Path:
-    """--git-root flag, then SUNBEAM_WORKSHOP_GIT_ROOT, then <root>/git.
+    """--git-root flag, then OPENSTACK_WORKSHOP_GIT_ROOT, then <root>/git.
 
     The default is relative to the repo checkout, so clones land under
     ``/project/git`` inside the workshop container and under
@@ -412,7 +412,7 @@ def apply_profile(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="sunbeam_workshop repos",
+        prog="openstack_workshop repos",
         description="Per-profile multi-forge repo clone/update (github, opendev, launchpad).",
     )
     subparsers = parser.add_subparsers(dest="action", required=True)

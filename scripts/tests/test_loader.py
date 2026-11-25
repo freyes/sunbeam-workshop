@@ -1,4 +1,4 @@
-"""Tests for sunbeam_workshop.loader (format-flexible data docs).
+"""Tests for openstack_workshop.loader (format-flexible data docs).
 
 All tests run against slots built under tmp_path. A slot is a suffix-less
 base path; exactly ``<base>.json`` or ``<base>.yaml`` is consulted.
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from sunbeam_workshop.loader import DocError, LoadedDoc, load_doc
+from openstack_workshop.loader import DocError, LoadedDoc, load_doc
 
 PURPOSE = "test slot purpose"
 

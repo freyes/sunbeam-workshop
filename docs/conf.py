@@ -19,7 +19,7 @@ import textwrap
 #######################
 
 # Project name
-project = "sunbeam-workshop"
+project = "openstack-workshop"
 
 # Author name; used in the default copyright statement in the page footer
 author = "Canonical Ltd."
@@ -129,7 +129,7 @@ rediraffe_dir_only = True
 # product docs.
 llms_txt_description = textwrap.dedent(
     """\
-    This is the documentation for sunbeam-workshop, a starter repository that turns a
+    This is the documentation for openstack-workshop, a starter repository that turns a
     fresh Ubuntu machine into a named, isolated OpenStack development workshop.
     """
 )

@@ -6,7 +6,7 @@
 # Ported from ck8s-dev/scripts/check-just-shell.sh; intentional divergences:
 # the project name (the hook glob covers .workshop/*-tools instead of
 # ck8s-dev-tools), an optional file-list argument, the container re-exec
-# (sunbeam-workshop has multiple named workshops, so there is no unambiguous
+# (openstack-workshop has multiple named workshops, so there is no unambiguous
 # container to re-exec into and shellcheck is simply required on PATH -
 # preinstalled on GitHub ubuntu runners, in the workshop containers, and one
 # `sudo apt install -y shellcheck` away on a host), hook discovery restricted

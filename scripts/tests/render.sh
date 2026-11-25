@@ -3,7 +3,7 @@
 #
 # Suite for scripts/render.sh (awesome-multirepo scripts/tests pattern).
 # Every test renders against a FIXTURE profile tree in a mktemp ROOT, selected
-# via SUNBEAM_WORKSHOP_ROOT - the suite never touches the real profiles/ tree
+# via OPENSTACK_WORKSHOP_ROOT - the suite never touches the real profiles/ tree
 # (the wave-2 profile templates are not required here).
 set -euo pipefail
 
@@ -47,7 +47,7 @@ EOF
 # per-root scratch dir.
 run_render() {
     local root=$1 name=$2
-    env TMPDIR="${root}/tmp" SUNBEAM_WORKSHOP_ROOT="${root}" bash "${RENDER}" "${name}"
+    env TMPDIR="${root}/tmp" OPENSTACK_WORKSHOP_ROOT="${root}" bash "${RENDER}" "${name}"
 }
 
 test_happy_render_fixture_instance() (

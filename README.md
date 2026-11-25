@@ -1,4 +1,4 @@
-# sunbeam-workshop
+# openstack-workshop
 
 A starter repository that turns a fresh Ubuntu 24.04+ amd64 machine into a
 named, isolated OpenStack development workshop - one guided command gives you

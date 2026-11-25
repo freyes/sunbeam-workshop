@@ -18,12 +18,12 @@
 #      listener on <addr>:8443, 1H token expiry, mint a restricted token and
 #      record its 64-hex fingerprint for destroy-time revocation
 #
-# SUNBEAM_WORKSHOP_ROOT overrides the repo root (fixture tests use it).
+# OPENSTACK_WORKSHOP_ROOT overrides the repo root (fixture tests use it).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
-ROOT="$(cd -- "${SUNBEAM_WORKSHOP_ROOT:-$SCRIPT_DIR/../..}" >/dev/null 2>&1 && pwd -P)"
+ROOT="$(cd -- "${OPENSTACK_WORKSHOP_ROOT:-$SCRIPT_DIR/../..}" >/dev/null 2>&1 && pwd -P)"
 # shellcheck source=scripts/vm/lib-vm.sh
 source "$SCRIPT_DIR/lib-vm.sh"
 
@@ -44,7 +44,7 @@ mkdir -p "$VM_STATE"
 chmod 0700 "$ROOT/.state" "$VM_STATE"
 if [ ! -f "$VM_KEY" ]; then
     echo "Generating SSH keypair for the sidecar VM..."
-    ssh-keygen -t ed25519 -f "$VM_KEY" -N "" -C "sunbeam-workshop@$VM_NAME"
+    ssh-keygen -t ed25519 -f "$VM_KEY" -N "" -C "openstack-workshop@$VM_NAME"
 fi
 chmod 0600 "$VM_KEY"
 
@@ -61,7 +61,7 @@ cleanup() {
 trap cleanup EXIT
 VARS_TMP="$(mktemp --suffix=.json)"
 RENDER_TMP="$(mktemp --suffix=.yaml)"
-( cd "$ROOT" && uv run --frozen --project "$ROOT/scripts" python -m sunbeam_workshop vars sunbeam ) > "$VARS_TMP"
+( cd "$ROOT" && uv run --frozen --project "$ROOT/scripts" python -m openstack_workshop vars sunbeam ) > "$VARS_TMP"
 jq --arg k "$(cat "$VM_KEY.pub")" '. + {vm_pubkey: $k}' "$VARS_TMP" > "$VARS_TMP.merged"
 mv -f -- "$VARS_TMP.merged" "$VARS_TMP"
 "$ROOT/scripts/jinja2" "$ROOT/scripts/vm/cloud-init.yaml.j2" "$VARS_TMP" > "$RENDER_TMP"
@@ -124,15 +124,15 @@ vm_revoke_trust
 # shellcheck disable=SC2016  # $fp expands on the VM, not here
 lxc exec "$VM_NAME" -- sh -c '
     lxc config trust list --format json \
-        | jq -r ".[] | select(.name==\"sunbeam-workshop\") | .fingerprint" \
+        | jq -r ".[] | select(.name==\"openstack-workshop\") | .fingerprint" \
         | while read -r fp; do [ -n "$fp" ] && lxc config trust remove "$fp"; done
-    lxc config trust revoke-token sunbeam-workshop >/dev/null 2>&1 || true'
+    lxc config trust revoke-token openstack-workshop >/dev/null 2>&1 || true'
 
 # Restricted to the default project: the client needs instance lifecycle on
 # `default` and nothing more. The token is stored 0600 under .state/vm/ so the
 # user can redeem it from the workshop container (see docs/dev-vm.rst);
 # destroy.sh revokes the certificate server-side and removes this file.
-token="$(lxc exec "$VM_NAME" -- lxc config trust add --quiet --name=sunbeam-workshop \
+token="$(lxc exec "$VM_NAME" -- lxc config trust add --quiet --name=openstack-workshop \
     --restricted --projects default)"
 printf '%s\n' "$token" > "$VM_TOKEN_FILE"
 chmod 0600 "$VM_TOKEN_FILE"
@@ -140,9 +140,9 @@ chmod 0600 "$VM_TOKEN_FILE"
 # Record: full 64-hex fingerprint (list truncates; JSON does not). Fail on
 # more than one match rather than silently recording an arbitrary one.
 mapfile -t fingerprints < <(lxc exec "$VM_NAME" -- lxc config trust list --format json \
-    | jq -r '.[] | select(.name=="sunbeam-workshop") | .fingerprint')
+    | jq -r '.[] | select(.name=="openstack-workshop") | .fingerprint')
 if [ "${#fingerprints[@]}" -ne 1 ]; then
-    echo "Error: expected exactly 1 'sunbeam-workshop' certificate on $VM_NAME, found ${#fingerprints[@]}." >&2
+    echo "Error: expected exactly 1 'openstack-workshop' certificate on $VM_NAME, found ${#fingerprints[@]}." >&2
     printf '       %s\n' "${fingerprints[@]}" >&2
     echo "       Revoke the extras: lxc exec $VM_NAME -- lxc config trust remove <fingerprint>" >&2
     exit 1

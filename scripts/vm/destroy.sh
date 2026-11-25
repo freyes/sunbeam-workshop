@@ -17,12 +17,12 @@
 #      left behind after destroy
 #   5. lxc delete -f the VM, drop ip/known_hosts/token/fingerprint records
 #
-# SUNBEAM_WORKSHOP_ROOT overrides the repo root (fixture tests use it).
+# OPENSTACK_WORKSHOP_ROOT overrides the repo root (fixture tests use it).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd -P)"
-ROOT="$(cd -- "${SUNBEAM_WORKSHOP_ROOT:-$SCRIPT_DIR/../..}" >/dev/null 2>&1 && pwd -P)"
+ROOT="$(cd -- "${OPENSTACK_WORKSHOP_ROOT:-$SCRIPT_DIR/../..}" >/dev/null 2>&1 && pwd -P)"
 # shellcheck source=scripts/vm/lib-vm.sh
 source "$SCRIPT_DIR/lib-vm.sh"
 

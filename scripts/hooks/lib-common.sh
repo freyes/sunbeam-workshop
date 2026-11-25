@@ -212,11 +212,11 @@ check_opencode_auth() {
 # exactly one match prints its path. Prints the resolved path on stdout and
 # returns 0; returns 1 when there is no match or the profile scan is
 # ambiguous - the caller warns and skips identity-dependent steps, never
-# aborts. SUNBEAM_WORKSHOP_STATE_DIR overrides the state dir (the test
+# aborts. OPENSTACK_WORKSHOP_STATE_DIR overrides the state dir (the test
 # suite uses it to point at a fixture dir).
 find_vars_doc() {
     local profile="${1:?find_vars_doc needs a profile name}"
-    local state_dir="${SUNBEAM_WORKSHOP_STATE_DIR:-/project/.state}"
+    local state_dir="${OPENSTACK_WORKSHOP_STATE_DIR:-/project/.state}"
     local by_host doc
     local -a matches=()
     by_host="${state_dir}/$(hostname).vars.json"
@@ -274,7 +274,7 @@ run_step() {
 }
 
 # run_user_fragments <hook> <profile> - source user lifecycle fragments from
-# ${SUNBEAM_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}: for each
+# ${OPENSTACK_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}: for each
 # scope in order (all, then <profile>, then $(hostname)) every
 # "<root>/<scope>/<hook>.d/*.sh" file is sourced in lexical order inside its
 # own subshell, so a fragment's exit or `set -e` death cannot kill the
@@ -290,7 +290,7 @@ run_step() {
 run_user_fragments() {
     local hook="${1:?run_user_fragments needs a hook name}"
     local profile="${2:?run_user_fragments needs a profile name}"
-    local root="${SUNBEAM_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}"
+    local root="${OPENSTACK_WORKSHOP_FRAGMENT_ROOT:-/project/config/local/hooks}"
     local scope dir fragment base
     USER_FRAGMENT_FAILURES=()
     for scope in all "$profile" "$(hostname)"; do
@@ -314,12 +314,12 @@ run_user_fragments() {
 
 # run_once <marker> - idempotency guard for fragments and other one-shot
 # steps: returns 0 the first time it is called with a marker (recording it
-# under ${XDG_STATE_HOME:-$HOME/.local/state}/sunbeam-workshop/run-once/)
+# under ${XDG_STATE_HOME:-$HOME/.local/state}/openstack-workshop/run-once/)
 # and 1 on every later call, so a re-run hook does not duplicate one-shot
 # work.
 run_once() {
     local marker="${1:?run_once needs a marker name}"
-    local dir="${XDG_STATE_HOME:-$HOME/.local/state}/sunbeam-workshop/run-once"
+    local dir="${XDG_STATE_HOME:-$HOME/.local/state}/openstack-workshop/run-once"
     mkdir -p "$dir"
     if [ -e "$dir/$marker" ]; then
         return 1
