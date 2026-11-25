@@ -11,7 +11,9 @@
 #      project-sunbeam-tools;
 #   5. oauth-tunnel with oauth_tunnel_part = 'connections' under
 #      `connections:` (gh-cli:github-token -> system:github-token and
-#      system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback).
+#      project-sunbeam-tools:openrouter-key -> system:openrouter-key; the
+#      mcp-oauth-callback tunnel pair is deliberately absent - no
+#      auto-connect - `just connect`/`just disconnect` wire it on demand).
 name: sunbeam-x
 base: ubuntu@26.04
 sdks:
@@ -48,13 +50,18 @@ sdks:
       interface: secret
       attributes:
         service: "openstack-workshop-openrouter-key"
-# Shared partial - MCP OAuth callback tunnel + AI-chain connections
+# Shared partial - MCP OAuth callback tunnel plug + AI-chain connections
 # (drafts D-8, D-9).
 #
 # The opencode SDK pins its MCP OAuth callback listener to localhost:19876
 # (canonical/opencode-sdk sdkcraft.yaml, slot opencode-mcp-oauth-callback).
 # The system tunnel plug below forwards that loopback endpoint from the host
-# so the browser redirect reaches opencode inside the workshop.
+# so the browser redirect reaches opencode inside the workshop - once the
+# plug is CONNECTED. The plug-to-slot pairing is deliberately absent from
+# `connections:` (no auto-connect at launch): forwarding host loopback into
+# the workshop is an opt-in, on-demand step - `just connect <name>` /
+# `just disconnect <name>` (scripts/oauth-tunnel.sh) wire and unwire the
+# pair when a consent flow needs it.
 #
 # One partial, two YAML locations, selected by the `oauth_tunnel_part` jinja
 # variable the including template sets before each include:
@@ -109,13 +116,18 @@ sdks:
     openrouter-key:
       interface: secret
 connections:
-# Shared partial - MCP OAuth callback tunnel + AI-chain connections
+# Shared partial - MCP OAuth callback tunnel plug + AI-chain connections
 # (drafts D-8, D-9).
 #
 # The opencode SDK pins its MCP OAuth callback listener to localhost:19876
 # (canonical/opencode-sdk sdkcraft.yaml, slot opencode-mcp-oauth-callback).
 # The system tunnel plug below forwards that loopback endpoint from the host
-# so the browser redirect reaches opencode inside the workshop.
+# so the browser redirect reaches opencode inside the workshop - once the
+# plug is CONNECTED. The plug-to-slot pairing is deliberately absent from
+# `connections:` (no auto-connect at launch): forwarding host loopback into
+# the workshop is an opt-in, on-demand step - `just connect <name>` /
+# `just disconnect <name>` (scripts/oauth-tunnel.sh) wire and unwire the
+# pair when a consent flow needs it.
 #
 # One partial, two YAML locations, selected by the `oauth_tunnel_part` jinja
 # variable the including template sets before each include:
@@ -123,12 +135,13 @@ connections:
 #                                     (right after the system-secret include)
 #   oauth_tunnel_part = 'connections' under the top-level `connections:` key
 
-# gh-cli:github-token is a manual connection per the gh-cli-sdk README; the
-# tunnel plug connects to the opencode SDK's OAuth callback slot (D-9).
+# gh-cli:github-token is a manual connection per the gh-cli-sdk README. The
+# mcp-oauth-callback tunnel plug deliberately has NO entry here (no
+# auto-connect): `just connect <name>` / `just disconnect <name>`
+# (scripts/oauth-tunnel.sh) wire it to the opencode SDK's OAuth callback
+# slot on demand (D-9).
 - plug: gh-cli:github-token
   slot: system:github-token
-- plug: system:mcp-oauth-callback
-  slot: opencode:opencode-mcp-oauth-callback
 # The openrouter-key secret plug never auto-connects; scripts/secret-setup.sh
 # wires it with `workshop connect`. The ref uses the RUNTIME sdk name because
 # the platform strips the `project-` prefix (connection PlugRefs reject

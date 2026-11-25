@@ -1,5 +1,6 @@
 # Copyright 2026 Canonical Ltd. All rights reserved.
-# Workshop instance lifecycle: guided setup, render, and CLI passthroughs.
+# Workshop instance lifecycle: guided setup, render, CLI passthroughs, and
+# the on-demand MCP OAuth callback tunnel wiring.
 
 # Guided end-to-end setup of a named workshop instance (guarded)
 setup name: assert-host
@@ -25,3 +26,12 @@ stop name:
 # rendered definition is removed too)
 remove name:
     exec bash scripts/remove.sh "{{name}}"
+
+# Connect the MCP OAuth callback tunnel plug to the opencode SDK slot on
+# demand (the rendered definition deliberately does not auto-connect it)
+connect name:
+    exec bash scripts/oauth-tunnel.sh connect "{{name}}"
+
+# Disconnect the MCP OAuth callback tunnel plug again
+disconnect name:
+    exec bash scripts/oauth-tunnel.sh disconnect "{{name}}"
