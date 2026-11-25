@@ -73,8 +73,12 @@ scripts/               Implementation (D-12: shell entry points, shellcheck-gate
                          persist vars -> secrets -> launch & wait Ready.
   render.sh              NAME -> (profile, suffix) resolution, merged vars doc,
                          jinja2 render, post-validation, atomic publish.
+  remove.sh              Remove a launched instance (passthrough) or drop a
+                         never-launched instance's rendered definition.
   secret-setup.sh        Host keyring storage + host gh login + gh-cli secret
                          plug wiring.
+  oauth-tunnel.sh        On-demand connect/disconnect of the MCP OAuth callback
+                         tunnel pair (never auto-connected at launch).
   doctor.sh              Read-only host prerequisite checks.
   lint.sh                Local twin of the CI lint workflow (5 gates).
   check-just-shell.sh    shellcheck over just recipe bodies and SDK hooks.
@@ -157,6 +161,7 @@ side, and the dangerous ones only work where they must.
 | `just launch <name>` | Launch a rendered instance (`workshop launch` passthrough) | - |
 | `just shell <name>` | Interactive shell in a running instance | - |
 | `just stop <name>` / `just remove <name>` | Stop a running instance / remove an instance - remove also drops a never-launched instance's rendered definition | - |
+| `just connect <name>` / `just disconnect <name>` | Wire / unwire the instance's MCP OAuth callback tunnel pair (`system:mcp-oauth-callback` -> `opencode:opencode-mcp-oauth-callback`) on demand - the rendered definition deliberately does not auto-connect it; both verbs are idempotent | - |
 | `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `git/` of the repo checkout - `/project/git` inside the container (github, opendev+Gerrit, launchpad). Extra args pass through to the repo manager; `--filter <glob>` (repeatable, ORed) limits the run to matching repo names, e.g. `just repos packaging --filter 'neutron*'` | `assert-host` |
 | `just secret-setup` / `just secret-setup <name>` | Store the GitHub token and the OpenRouter key (skippable) in the host keyring, log in host `gh`, wire the instance's gh-cli + openrouter secret plugs, converge opencode auth | `assert-host` |
 | `just vm-create` / `just vm-destroy` | Sidecar VM lifecycle (sunbeam profile; destroy keeps `.state/vm/` unless `PURGE=1`) | `assert-host` |
@@ -350,6 +355,8 @@ activity.
 | `just shell <name>` | Interactive bash shell in a running instance |
 | `just stop <name>` | Stop a running instance |
 | `just remove <name>` | Remove an instance and its container |
+| `just connect <name>` | Wire the MCP OAuth callback tunnel pair on demand (never auto-connected at launch) |
+| `just disconnect <name>` | Unwire the MCP OAuth callback tunnel pair again |
 | `just doctor [name]` | Read-only host prerequisite checks |
 | `just repos [profile]` | Clone or update the per-profile repository checkouts (guarded) |
 | `just secret-setup [name]` | Store the GitHub token and the OpenRouter key (skippable) in the host keyring, log in host `gh`, wire the instance's gh-cli + openrouter secret plugs, converge opencode auth (guarded) |

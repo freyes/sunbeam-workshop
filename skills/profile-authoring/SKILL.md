@@ -73,11 +73,12 @@ broken. Include order is the contract (copy the existing templates exactly):
    would duplicate the YAML key.
 5. Under top-level `connections:`,
    `{% set oauth_tunnel_part = 'connections' %}` and include
-   `partials/oauth-tunnel.yaml.j2` again - emits THREE entries: the
-   `gh-cli:github-token -> system:github-token` manual connection, the
-   `system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback`
-   tunnel connection, and
+   `partials/oauth-tunnel.yaml.j2` again - emits TWO entries: the
+   `gh-cli:github-token -> system:github-token` manual connection and
    `{{ profile }}-tools:openrouter-key -> system:openrouter-key`. The
+   `system:mcp-oauth-callback` tunnel plug deliberately has NO entry -
+   no auto-connect at launch: `just connect <name>` / `just disconnect
+   <name>` (`scripts/oauth-tunnel.sh`) wire and unwire it on demand. The
    openrouter entry uses the RUNTIME (stripped) SDK name
    `<profile>-tools:openrouter-key`: `project-` is a definition-file
    source marker that the platform strips at runtime, and connection

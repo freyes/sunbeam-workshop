@@ -1,0 +1,23 @@
+---
+features:
+  - |
+    The MCP OAuth callback tunnel can now be wired on demand. Two new
+    targets, ``just connect <name>`` and ``just disconnect <name>``
+    (``scripts/oauth-tunnel.sh``), connect and disconnect the instance's
+    ``system:mcp-oauth-callback`` plug to the opencode SDK's
+    ``opencode:opencode-mcp-oauth-callback`` slot. Both verbs are
+    idempotent and need a launched instance. A manual connection survives
+    ``workshop refresh``; ``workshop restore`` drops it, after which
+    ``just connect <name>`` wires it again. The Jira MCP OAuth consent
+    how-to (docs/how-to/authenticate-jira-mcp.rst) now leads with the
+    on-demand connect step.
+upgrade:
+  - |
+    The MCP OAuth callback tunnel is no longer auto-connected at launch.
+    The rendered workshop definitions drop the
+    ``system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback``
+    connection entry, so launching a current definition leaves the tunnel
+    unwired: forward host loopback into the workshop only when an OAuth
+    consent needs it, with ``just connect <name>``. Instances launched
+    from older definitions keep their connected pair until their next
+    refresh or restore applies the new definition.

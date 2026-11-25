@@ -47,6 +47,23 @@ Prerequisites
 Run the OAuth consent
 ---------------------
 
+**Connect the callback tunnel first, on the host.** The rendered workshop
+definition declares the system ``mcp-oauth-callback`` tunnel plug
+(endpoint ``localhost:19876``) but deliberately does **not** auto-connect
+it at launch: forwarding host loopback into the workshop is an opt-in,
+on-demand step. Wire the pair with:
+
+.. code-block:: sh
+
+   just connect <name>
+
+That runs ``workshop connect
+<name>/system:mcp-oauth-callback <name>/opencode:opencode-mcp-oauth-callback``
+- the opencode SDK's OAuth callback slot - and is idempotent.
+``just disconnect <name>`` disconnects the pair again when the consent is
+done. A manual connection survives ``workshop refresh``; ``workshop
+restore`` drops it, so re-run ``just connect <name>`` after a restore.
+
 Inside the workshop (``just shell <name>``), start the authentication flow:
 
 .. code-block:: sh
@@ -54,12 +71,9 @@ Inside the workshop (``just shell <name>``), start the authentication flow:
    opencode mcp auth atlassian
 
 opencode prints a consent URL to open in your browser and listens for the
-OAuth callback on **localhost:19876**. That loopback endpoint reaches the
-workshop through a tunnel: the rendered workshop definition declares a
-system ``mcp-oauth-callback`` tunnel plug with endpoint
-``localhost:19876``, connected to the opencode SDK's
-``opencode-mcp-oauth-callback`` slot, so the browser's redirect on your
-host is forwarded into the container.
+OAuth callback on **localhost:19876**. The connected tunnel plug forwards
+that loopback endpoint from the host, so the browser's redirect reaches
+opencode inside the container.
 
 Approve the consent in the browser. opencode receives the callback and
 stores the resulting token in its data directory.
@@ -86,9 +100,10 @@ The callback travels through the tunnel connection. Verify it on the host:
    workshop connections <name>
 
 You should see ``system:mcp-oauth-callback`` connected to
-``opencode:opencode-mcp-oauth-callback``. The connection is part of the
-rendered definition, so a missing entry means the definition predates it -
-re-render with ``just render <name>`` and relaunch.
+``opencode:opencode-mcp-oauth-callback`` (noted ``manual``). The pairing
+is connected on demand, not part of the rendered definition - so a
+missing entry means the plug was never wired (or a restore dropped it):
+run ``just connect <name>`` and retry the consent.
 
 ``opencode mcp list`` **does not show the** ``atlassian`` **server.**
 The seed step merges the entry into

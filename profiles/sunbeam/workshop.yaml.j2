@@ -11,7 +11,9 @@
 #      project-sunbeam-tools;
 #   5. oauth-tunnel with oauth_tunnel_part = 'connections' under
 #      `connections:` (gh-cli:github-token -> system:github-token and
-#      system:mcp-oauth-callback -> opencode:opencode-mcp-oauth-callback).
+#      project-sunbeam-tools:openrouter-key -> system:openrouter-key; the
+#      mcp-oauth-callback tunnel pair is deliberately absent - no
+#      auto-connect - `just connect`/`just disconnect` wire it on demand).
 name: {{ workshop_name }}
 base: ubuntu@26.04
 sdks:
