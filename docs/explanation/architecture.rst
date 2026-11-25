@@ -150,8 +150,9 @@ Credential flow
                          without copying private keys
 
     Browser (host) ──► localhost:19876 ──► system:mcp-oauth-callback plug
-                     ──► opencode:opencode-mcp-oauth-callback slot
-                         (Atlassian OAuth consent reaches opencode)
+                      ──► opencode:opencode-mcp-oauth-callback slot
+                          (manual connect - just connect <name>; the
+                          Atlassian OAuth consent reaches opencode)
 
 The OpenRouter lane converges in two steps. On a first launch the manual
 secret connect cannot happen during the launch change, so ``just
@@ -161,6 +162,15 @@ refresh, the container's writable layer is discarded and ``auth.json`` is
 re-derived from scratch: the platform restores the preserved connection
 before the ``setup-project`` hook runs, so the writer rebuilds the same
 file.
+
+The OAuth callback tunnel is opt-in. The definition declares the system
+``mcp-oauth-callback`` tunnel plug but no connection entry for it, so
+launch never wires host loopback into the workshop on its own:
+``just connect <name>`` / ``just disconnect <name>``
+(``scripts/oauth-tunnel.sh``) connect and disconnect the plug to the
+opencode SDK's callback slot on demand, both idempotently. A manual
+connection survives ``workshop refresh``; ``workshop restore`` drops it,
+and ``just connect <name>`` wires it again.
 
 Three rules keep this safe:
 

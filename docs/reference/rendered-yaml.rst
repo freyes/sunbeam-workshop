@@ -76,14 +76,12 @@ name:
          interface: ssh-agent
        openrouter-key:
          interface: secret
-   connections:
+    connections:
 
-   - plug: gh-cli:github-token
-     slot: system:github-token
-   - plug: system:mcp-oauth-callback
-     slot: opencode:opencode-mcp-oauth-callback
-   - plug: sunbeam-tools:openrouter-key
-     slot: system:openrouter-key
+    - plug: gh-cli:github-token
+      slot: system:github-token
+    - plug: sunbeam-tools:openrouter-key
+      slot: system:openrouter-key
 
 The pieces:
 
@@ -96,14 +94,14 @@ The pieces:
      - The instance name and the base image (``ubuntu@26.04``).
    * - ``system`` slots
      - Two **secret slots** naming host keyring items by lookup attributes, never the values: ``github-token`` (``service: "gh:github.com"``, ``username: ""`` for gh's current account) and ``openrouter-key`` (``service: "openstack-workshop-openrouter-key"``, the item ``just secret-setup`` stores).
-   * - ``system`` plugs
-     - ``mcp-oauth-callback`` is a **tunnel plug** forwarding ``localhost:19876`` from the host so the Atlassian OAuth redirect reaches opencode inside the workshop.
+    * - ``system`` plugs
+      - ``mcp-oauth-callback`` is a **tunnel plug** forwarding ``localhost:19876`` from the host so the Atlassian OAuth redirect reaches opencode inside the workshop - once ``just connect <name>`` wires it (the definition never auto-connects the pair).
    * - SDK chain
      - ``opencode``, ``openchamber`` (``latest/edge``), ``gh-cli``, ``uv`` (``latest/stable``), then the in-project ``project-<profile>-tools`` SDK; a profile's ``extra_sdks`` land between ``uv`` and the project SDK (packaging inserts ``orange-dev-tools``).
    * - ``ssh-agent`` / ``openrouter-key`` plugs
      - Both grafted onto the project tools SDK. The ssh-agent plug forwards the host SSH agent for git over SSH (the system slot is implicit, so no connection entry is needed); the ``openrouter-key`` secret plug delivers the OpenRouter key to the hooks that write opencode's ``auth.json``.
-   * - ``connections``
-     - ``gh-cli:github-token`` connects to the system secret slot and ``<profile>-tools:openrouter-key`` to the system ``openrouter-key`` slot (both manual connections completed by ``just secret-setup <name>``); the system tunnel plug connects to the opencode SDK's OAuth callback slot.
+    * - ``connections``
+      - ``gh-cli:github-token`` connects to the system secret slot and ``<profile>-tools:openrouter-key`` to the system ``openrouter-key`` slot (both manual connections completed by ``just secret-setup <name>``). The system tunnel plug deliberately has **no** entry here: it is never auto-connected at launch - ``just connect <name>`` wires it to the opencode SDK's OAuth callback slot on demand, ``just disconnect <name>`` disconnects it again.
 
 A suffixed instance renders the same template with its own name - the
 ``packaging-foo`` render is identical in structure except for

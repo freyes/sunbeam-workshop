@@ -25,8 +25,10 @@ just by adding a suffix.
   `openrouter-key` secret plug.
 - **Jira MCP, pre-seeded.** The Atlassian MCP server entry is seeded into the
   opencode config at provisioning; OAuth consent runs through
-  `opencode mcp auth atlassian`, with the browser callback forwarded into the
-  workshop through a tunnel plug.
+  `opencode mcp auth atlassian`, with the browser callback forwarded into
+  the workshop through a tunnel plug that `just connect <name>` wires on
+  demand - it is never auto-connected at launch (`just disconnect <name>`
+  disconnects it again).
 - **Agentic skills.** `canonical/openstack-agentic-skills` is cloned and
   symlinked into the opencode skills directory at provisioning, so OpenStack
   team practices are available to the agent out of the box.
