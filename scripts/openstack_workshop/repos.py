@@ -14,10 +14,13 @@ Per forge:
               from the vars doc: ``config.gerrit_username`` or the user name).
 * launchpad - https clone from the entry url.
 
-All clones live under ``<checkout>/git/<repo>`` - the ``git/`` directory of
-the repo checkout, which is ``/project/git`` inside the workshop container
-(A-7) - overridable with ``--git-root`` or ``OPENSTACK_WORKSHOP_GIT_ROOT``
-(tests use local fixtures).
+All clones live under ``<checkout>/git/<name>/<repo>`` - namespaced by the
+workshop NAME, so a bare profile and its suffixed instances (``packaging``
+vs ``packaging-foo``) keep isolated clone trees under the ``git/``
+directory of the repo checkout, which is ``/project/git`` inside the
+workshop container (A-7). The base ``git/`` root is overridable with
+``--git-root`` or ``OPENSTACK_WORKSHOP_GIT_ROOT`` (tests use local
+fixtures); the ``<name>/`` namespace applies on top of either.
 Existing clones are fetched and fast-forwarded, never re-cloned; dirty
 clones are reported and left completely untouched (never reset). Cloning is
 https-only - ssh is for push via agent forwarding. Concurrency is a
@@ -62,9 +65,11 @@ class ReposError(Exception):
 def resolve_git_root(cli_value: str | None, root: Path) -> Path:
     """--git-root flag, then OPENSTACK_WORKSHOP_GIT_ROOT, then <root>/git.
 
-    The default is relative to the repo checkout, so clones land under
-    ``/project/git`` inside the workshop container and under
-    ``<checkout>/git`` on a host checkout.
+    This is the BASE root only: callers namespace it per workshop name (see
+    apply_profile), so clones land under ``<resolved>/<name>/<repo>``. The
+    default is relative to the repo checkout, so clones land under
+    ``/project/git/<name>`` inside the workshop container and under
+    ``<checkout>/git/<name>`` on a host checkout.
     """
     if cli_value:
         return Path(cli_value)
@@ -362,9 +367,15 @@ def apply_profile(
     git_root: Path,
     filters: list[str] | None = None,
 ) -> tuple[dict[str, Any], int]:
-    """Clone/update every repo for NAME; returns (summary, exit_code)."""
+    """Clone/update every repo for NAME; returns (summary, exit_code).
+
+    Clones are namespaced per workshop NAME under the base git root
+    (``<git-root>/<name>/<repo>``). build_vars validates NAME before it
+    is used as a path component.
+    """
     vars_doc = build_vars(root, name)
     profile = vars_doc["profile"]
+    git_root = git_root / name
     data = load_repo_config(root, profile)
     github_handle = vars_doc["user"]["github_handle"]
     gerrit_user = vars_doc["config"].get("gerrit_username") or vars_doc["user"]["name"]
@@ -451,7 +462,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--git-root",
         default=None,
         metavar="PATH",
-        help=f"clone root (default: ${GIT_ROOT_ENV} or <repo>/{DEFAULT_GIT_DIR})",
+        help=(
+            "base clone root; repos land under <root>/<name>/ "
+            f"(default: ${GIT_ROOT_ENV} or <repo>/{DEFAULT_GIT_DIR})"
+        ),
     )
     apply_parser.add_argument(
         "--filter",
