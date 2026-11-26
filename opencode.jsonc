@@ -1,0 +1,21 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "disabled_providers": ["opencode"],
+  "enabled_providers": ["openrouter"],
+  "model": "openrouter/z-ai/glm-5.3",
+  "small_model": "openrouter/deepseek/deepseek-v4.1-flash",
+  "agent": {
+    "title": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash"
+    }
+  },
+  "plugin": [
+    "oh-my-openagent"
+  ],
+  "mcp": {
+    "atlassian": {
+      "type": "remote",
+      "url": "https://mcp.atlassian.com/v2/mcp"
+    }
+  }
+}

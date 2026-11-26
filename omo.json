@@ -1,0 +1,69 @@
+{
+  "model_profile": "openrouter/deepseek/deepseek-v4-pro",
+
+  "agents": {
+    "sisyphus": {
+      "model": "openrouter/z-ai/glm-5.3",
+      "reasoning": "max"
+    },
+    "oracle": {
+      "model": "openrouter/z-ai/glm-5.3",
+      "reasoning": "max"
+    },
+    "plan-consultant": {
+      "model": "openrouter/nvidia/nemotron-3-ultra",
+      "reasoning": "max"
+    },
+    "plan-reviewer": {
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "reasoning": "max"
+    },
+    "explore": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash",
+      "reasoning": "off"
+    },
+    "librarian": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash",
+      "reasoning": "off"
+    }
+  },
+
+  "categories": {
+    "ultrabrain": {
+      "model": "openrouter/nvidia/nemotron-3-ultra",
+      "reasoning": "max"
+    },
+    "deep-high": {
+      "model": "openrouter/nvidia/nemotron-3-ultra",
+      "reasoning": "max"
+    },
+    "deep-low": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash",
+      "reasoning": "medium"
+    },
+    "visual-engineering": {
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "reasoning": "max"
+    },
+    "artistry": {
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "reasoning": "max"
+    },
+    "unspecified-high": {
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "reasoning": "medium"
+    },
+    "unspecified-low": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash",
+      "reasoning": "medium"
+    },
+    "writing": {
+      "model": "openrouter/deepseek/deepseek-v4-pro",
+      "reasoning": "low"
+    },
+    "quick": {
+      "model": "openrouter/deepseek/deepseek-v4.1-flash",
+      "reasoning": "off"
+    }
+  }
+}
