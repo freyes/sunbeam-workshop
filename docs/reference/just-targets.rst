@@ -53,7 +53,7 @@ Host and credentials
      - Store the GitHub token in the host keyring, log in the host ``gh``, and - with a name - wire the instance's gh-cli secret plug.
      - ``assert-host``
    * - ``just repos [profile]``
-     - Clone or update the per-profile repository checkouts under ``git/`` of the repo checkout (``/project/git`` inside the workshop container; GitHub, opendev/Gerrit, Launchpad). Extra arguments pass through to the repo manager; ``--filter <glob>`` (repeatable, ORed) limits the run to matching repo names, e.g. ``just repos packaging --filter 'neutron*'``.
+     - Clone or update the per-profile repository checkouts under ``git/<name>/`` of the repo checkout (``/project/git/<name>`` inside the workshop container, where ``<name>`` is the workshop name; GitHub, opendev/Gerrit, Launchpad). Extra arguments pass through to the repo manager; ``--filter <glob>`` (repeatable, ORed) limits the run to matching repo names, e.g. ``just repos packaging --filter 'neutron*'``.
      - ``assert-host``
 
 Sidecar VM (sunbeam profile)
