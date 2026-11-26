@@ -1,0 +1,18 @@
+---
+features:
+  - |
+    ``just repos <name>`` now namespaces its working clones per workshop
+    name: repositories clone under ``git/<name>/`` of the repo checkout
+    (``/project/git/<name>/`` inside the workshop container) instead of
+    directly under ``git/``. A bare profile and its suffixed instances
+    (``packaging`` vs ``packaging-foo``) keep isolated clone trees even
+    though they share one repo list. The ``--git-root`` flag and the
+    ``OPENSTACK_WORKSHOP_GIT_ROOT`` environment variable still override
+    the base ``git/`` root; the per-name namespace applies on top of
+    either.
+upgrade:
+  - |
+    Clones created before this change live flat under ``git/`` and are
+    not migrated. Re-running ``just repos <name>`` clones fresh copies
+    under ``git/<name>/``; move or remove the old flat checkouts
+    yourself once you have confirmed the new layout.
