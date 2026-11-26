@@ -8,6 +8,12 @@
 # container the checkout root is /project)
 git/
 
+# Local apt repo provisioned inside a launched packaging workshop by the
+# orange-dev-tools SDK hook (dput local / sbuild / mini-dinstall state).
+# Kept byte-identical to the line that hook appends when it is missing,
+# so a launch never leaves an uncommitted .gitignore diff behind.
+local-repo/
+
 # Runtime state and credentials
 .state/
 .openchamber-password
