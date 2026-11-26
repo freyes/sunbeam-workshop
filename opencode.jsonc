@@ -10,7 +10,8 @@
     }
   },
   "plugin": [
-    "oh-my-openagent"
+    "oh-my-openagent",
+    "opencode-session-auto-rename"
   ],
   "mcp": {
     "atlassian": {
