@@ -21,6 +21,16 @@
       "url": "https://github.com/canonical/snap-openstack-hypervisor"
     },
     {
+      "name": "snap-openstack-network-agents",
+      "forge": "github",
+      "url": "https://github.com/canonical/snap-openstack-network-agents"
+    },
+    {
+      "name": "snap-epa-orchestrator",
+      "forge": "github",
+      "url": "https://github.com/canonical/snap-epa-orchestrator"
+    },
+    {
       "name": "ubuntu-openstack-rocks",
       "forge": "github",
       "url": "https://github.com/canonical/ubuntu-openstack-rocks"
