@@ -145,8 +145,9 @@ the repository root. Load the matching skill before doing the work:
 You typically operate either on a host checkout of this repo or **inside a
 launched workshop container**, where `$USER` is `workshop` and this repo is
 mounted at `/project`. Working clones of the profile repositories live under
-`/project/git/` (inside the workshop) or `<checkout>/git/` (on a host
-checkout). Host-mutating recipes are guarded and abort inside the
+`/project/git/<name>/` (inside the workshop) or `<checkout>/git/<name>/` (on
+a host checkout), namespaced per workshop name. Host-mutating recipes are
+guarded and abort inside the
 container (Invariant 4), so the same command list is correct from either
 side, and the dangerous ones only work where they must.
 
@@ -162,7 +163,7 @@ side, and the dangerous ones only work where they must.
 | `just shell <name>` | Interactive shell in a running instance | - |
 | `just stop <name>` / `just remove <name>` | Stop a running instance / remove an instance - remove also drops a never-launched instance's rendered definition | - |
 | `just connect <name>` / `just disconnect <name>` | Wire / unwire the instance's MCP OAuth callback tunnel pair (`system:mcp-oauth-callback` -> `opencode:opencode-mcp-oauth-callback`) on demand - the rendered definition deliberately does not auto-connect it; both verbs are idempotent | - |
-| `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `git/` of the repo checkout - `/project/git` inside the container (github, opendev+Gerrit, launchpad). Extra args pass through to the repo manager; `--filter <glob>` (repeatable, ORed) limits the run to matching repo names, e.g. `just repos packaging --filter 'neutron*'` | `assert-host` |
+| `just repos` / `just repos <profile>` | Clone or update the per-profile checkouts under `git/<name>/` of the repo checkout - `/project/git/<name>` inside the container, namespaced per workshop name (github, opendev+Gerrit, launchpad). Extra args pass through to the repo manager; `--filter <glob>` (repeatable, ORed) limits the run to matching repo names, e.g. `just repos packaging --filter 'neutron*'` | `assert-host` |
 | `just secret-setup` / `just secret-setup <name>` | Store the GitHub token and the OpenRouter key (skippable) in the host keyring, log in host `gh`, wire the instance's gh-cli + openrouter secret plugs, converge opencode auth | `assert-host` |
 | `just vm-create` / `just vm-destroy` | Sidecar VM lifecycle (sunbeam profile; destroy keeps `.state/vm/` unless `PURGE=1`) | `assert-host` |
 | `just vm-status` / `just vm-shell` | Sidecar VM state (read-only) / ssh shell | - |
@@ -176,7 +177,7 @@ side, and the dangerous ones only work where they must.
 
 | Target | Status |
 | --- | --- |
-| Working clones under `/project/git` | **MAY mutate.** They are the development sandboxes: branch, commit, push to your fork, run tox. |
+| Working clones under `/project/git/<name>/` | **MAY mutate.** They are the development sandboxes: branch, commit, push to your fork, run tox. |
 | Tracked sources (`Justfile`, `just/`, `scripts/`, `profiles/`, `.workshop/*-tools/`, `config/`, `docs/`, `skills/`, `schema/README.md`) | **MAY edit** as normal code changes. Commit deliberately; keep this file in sync. |
 | `config/local/` | **MAY create, NEVER commit.** User-level gitignored customization (vars layers, hook fragments). |
 | `.workshop/*-user-tools/` | **MAY create, NEVER commit.** User-owned gitignored in-project SDKs. |
@@ -191,7 +192,7 @@ Two things the table cannot protect, because they bypass `just` entirely:
 - **`workshop` and `lxc` work directly from the host.** The guards above are
   conventions in recipes, not an enforcement boundary. `workshop remove
   <name>` destroys an instance no matter how it was launched.
-- **`git` works in every clone under `/project/git`.** A clone is a real
+- **`git` works in every clone under `/project/git/<name>/`.** A clone is a real
   checkout: never force-push, never push as a side effect of unrelated work.
 
 ### Add a repository to a profile
@@ -201,7 +202,9 @@ Two things the table cannot protect, because they bypass `just` entirely:
    `{"name": "<dir-name>", "forge": "github|opendev|launchpad", "url": "<clone-url>"}`,
    plus optional `"fork_of": "<owner>/<repo>"` for a GitHub fork workflow.
 2. Apply from the host: `just repos <profile>` (guarded). Clones land under
-   `/project/git/<name>`; existing clones are fetched and fast-forwarded,
+   `/project/git/<instance>/<repo>` - namespaced per workshop name, so a
+   bare profile and its suffixed instances keep isolated clone trees;
+   existing clones are fetched and fast-forwarded,
    never re-cloned; dirty clones are reported and left untouched.
 3. Forge behavior: `github` clones via `gh repo clone` and adds a `fork`
    remote when `fork_of` is set (needs `github_handle` in config); `opendev`

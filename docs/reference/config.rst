@@ -57,9 +57,10 @@ identity (user name and email) from it.
 Repository lists: ``config/repos/<profile>.json``
 -------------------------------------------------
 
-``just repos <profile>`` clones or updates the checkouts under ``git/`` of
-the repo checkout (``/project/git`` inside the workshop container) from
-these lists. ``--filter <glob>`` (repeatable, ORed) limits the run to
+``just repos <profile>`` clones or updates the checkouts under
+``git/<name>/`` of the repo checkout (``/project/git/<name>`` inside the
+workshop container, where ``<name>`` is the workshop name) from these
+lists. ``--filter <glob>`` (repeatable, ORed) limits the run to
 matching repo names - e.g. ``just repos packaging --filter 'neutron*'``
 clones only the repos whose name matches ``neutron*``. Each entry in
 ``core_repos`` or ``supporting_repos`` is an object:
@@ -80,7 +81,7 @@ clones only the repos whose name matches ``neutron*``. Each entry in
      - Meaning
    * - ``name``
      - yes
-     - Directory name under the clone root (``/project/git`` inside the workshop container).
+     - Directory name under the workshop's clone root (``/project/git/<name>/`` inside the workshop container, where ``<name>`` is the workshop name).
    * - ``forge``
      - yes
      - One of ``github``, ``opendev``, ``launchpad`` - selects the clone behaviour below.

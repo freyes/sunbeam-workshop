@@ -244,14 +244,14 @@ def test_apply_clones_github_via_gh_shim(
         core=[{"name": "rocks", "forge": "github", "url": str(bare)}],
     )
     assert main(["repos", "apply", "sunbeam"]) == 0
-    clone = root / "git" / "rocks"
+    clone = root / "git" / "sunbeam" / "rocks"
     assert (clone / ".git").is_dir()
     summary = read_summary(capsys)
     assert summary["repos"][0]["status"] == "cloned"
     assert summary["counts"] == {"cloned": 1}
     state = json.loads((root / ".state" / "repos-sunbeam.json").read_text())
     assert state["repos"][0]["name"] == "rocks"
-    assert state["git_root"] == str(root / "git")
+    assert state["git_root"] == str(root / "git" / "sunbeam")
 
 
 def test_apply_clones_launchpad_entry(
@@ -264,7 +264,7 @@ def test_apply_clones_launchpad_entry(
         core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}],
     )
     assert main(["repos", "apply", "packaging"]) == 0
-    clone = root / "git" / "keystone"
+    clone = root / "git" / "packaging" / "keystone"
     assert (clone / ".git").is_dir()
     # launchpad entries get no gerrit remote.
     proc = subprocess.run(
@@ -272,6 +272,28 @@ def test_apply_clones_launchpad_entry(
         capture_output=True,
     )
     assert proc.returncode != 0
+
+
+def test_apply_suffixed_instance_clones_under_instance_namespace(
+    root: Path, shims: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    bare, _ = make_remote(root, "keystone")
+    write_repo_config(
+        root,
+        "packaging",
+        core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}],
+    )
+    # packaging-foo resolves to the packaging repo list but namespaces by the
+    # instance name, so it never shares clones with the bare profile name.
+    assert main(["repos", "apply", "packaging-foo"]) == 0
+    clone = root / "git" / "packaging-foo" / "keystone"
+    assert (clone / ".git").is_dir()
+    assert not (root / "git" / "packaging" / "keystone").exists()
+    summary = read_summary(capsys)
+    assert summary["workshop"] == "packaging-foo"
+    assert summary["profile"] == "packaging"
+    assert summary["repos"][0]["path"] == str(clone)
+    assert (root / ".state" / "repos-packaging-foo.json").is_file()
 
 
 def test_apply_opendev_wires_gerrit_remote(
@@ -286,7 +308,7 @@ def test_apply_opendev_wires_gerrit_remote(
         core=[{"name": "sunbeam-charms", "forge": "opendev", "url": str(bare)}],
     )
     assert main(["repos", "apply", "sunbeam"]) == 0
-    clone = root / "git" / "sunbeam-charms"
+    clone = root / "git" / "sunbeam" / "sunbeam-charms"
     assert git("-C", str(clone), "remote", "get-url", "gerrit") == (
         "ssh://alice@review.opendev.org:29418/openstack/sunbeam-charms.git"
     )
@@ -311,7 +333,7 @@ def test_apply_github_fork_of_adds_fork_remote(
         ],
     )
     assert main(["repos", "apply", "sunbeam"]) == 0
-    clone = root / "git" / "rocks"
+    clone = root / "git" / "sunbeam" / "rocks"
     assert (
         git("-C", str(clone), "remote", "get-url", "fork")
         == "git@github.com:alicegh/rocks.git"
@@ -355,7 +377,7 @@ def test_apply_twice_fetches_without_reclone(
     )
     assert main(["repos", "apply", "sunbeam"]) == 0
     capsys.readouterr()
-    clone = root / "git" / "sunbeam-charms"
+    clone = root / "git" / "sunbeam" / "sunbeam-charms"
     marker = clone / ".git" / "CLONE-MARKER"
     marker.write_text("original clone", encoding="utf-8")
     assert main(["repos", "apply", "sunbeam"]) == 0
@@ -384,7 +406,7 @@ def test_apply_ff_updates_after_remote_advance(
     assert main(["repos", "apply", "packaging"]) == 0
     summary = read_summary(capsys)
     assert summary["repos"][0]["status"] == "updated"
-    clone = root / "git" / "keystone"
+    clone = root / "git" / "packaging" / "keystone"
     assert git("-C", str(clone), "rev-parse", "HEAD") == remote_head
 
 
@@ -415,9 +437,9 @@ def test_apply_filter_clones_only_matching_entries(
         ],
     )
     assert main(["repos", "apply", "packaging", "--filter", "neutron*"]) == 0
-    assert (root / "git" / "neutron-fwaas" / ".git").is_dir()
-    assert not (root / "git" / "keystone").exists()
-    assert not (root / "git" / "nova").exists()
+    assert (root / "git" / "packaging" / "neutron-fwaas" / ".git").is_dir()
+    assert not (root / "git" / "packaging" / "keystone").exists()
+    assert not (root / "git" / "packaging" / "nova").exists()
     summary = read_summary(capsys)
     assert [r["name"] for r in summary["repos"]] == ["neutron-fwaas"]
     assert summary["filters"] == ["neutron*"]
@@ -435,7 +457,7 @@ def test_apply_filter_matching_nothing_warns_and_clones_nothing(
         core=[{"name": "keystone", "forge": "launchpad", "url": str(bare)}],
     )
     assert main(["repos", "apply", "packaging", "--filter", "neutron*"]) == 0
-    assert not (root / "git" / "keystone").exists()
+    assert not (root / "git" / "packaging" / "keystone").exists()
     captured = capsys.readouterr()
     summary = json.loads(captured.out)
     assert summary["repos"] == []
@@ -456,7 +478,7 @@ def test_apply_reports_dirty_clone_and_leaves_it(
     )
     assert main(["repos", "apply", "packaging"]) == 0
     capsys.readouterr()
-    clone = root / "git" / "keystone"
+    clone = root / "git" / "packaging" / "keystone"
     remote_head = advance_remote(work, "README.md", "# keystone\nadvanced\n")
     with (clone / "README.md").open("a", encoding="utf-8") as fh:
         fh.write("local uncommitted edit\n")
@@ -498,7 +520,7 @@ def test_apply_unknown_forge_exits_nonzero(
     )
     assert main(["repos", "apply", "sunbeam"]) == 2
     assert "unknown forge 'gitlab'" in capsys.readouterr().err
-    assert not (root / "git" / "bad").exists()
+    assert not (root / "git" / "sunbeam" / "bad").exists()
     assert not (root / ".state" / "repos-sunbeam.json").exists()
 
 
@@ -514,7 +536,7 @@ def test_git_root_defaults_to_checkout_git_dir(
     )
     monkeypatch.delenv("OPENSTACK_WORKSHOP_GIT_ROOT")
     assert main(["repos", "apply", "packaging"]) == 0
-    clone = root / "git" / "keystone"
+    clone = root / "git" / "packaging" / "keystone"
     assert (clone / ".git").is_dir()
 
 
@@ -566,8 +588,8 @@ def test_apply_without_name_applies_all_configured_profiles(
     )
     # Mirrors `just repos` with no argument: apply every configured profile.
     assert main(["repos", "apply"]) == 0
-    assert (root / "git" / "sunbeam-charms" / ".git").is_dir()
-    assert (root / "git" / "keystone" / ".git").is_dir()
+    assert (root / "git" / "sunbeam" / "sunbeam-charms" / ".git").is_dir()
+    assert (root / "git" / "packaging" / "keystone" / ".git").is_dir()
     assert (root / ".state" / "repos-sunbeam.json").is_file()
     assert (root / ".state" / "repos-packaging.json").is_file()
 

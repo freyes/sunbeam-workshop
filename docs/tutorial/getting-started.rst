@@ -198,8 +198,8 @@ Where to go next
 - :doc:`../how-to/authenticate-jira-mcp` - connect opencode to Jira through
   the Atlassian MCP server.
 - ``just repos <profile>`` - clone or update the profile's repositories
-  under ``git/`` of the repo checkout (``/project/git`` inside the
-  workshop container; see :doc:`../reference/config` for the repo lists).
+  under ``git/<name>/`` of the repo checkout (``/project/git/<name>`` inside
+  the workshop container; see :doc:`../reference/config` for the repo lists).
 - ``just vm-create`` - create the optional sunbeam sidecar VM for craft
   builds and deployment testing (see ``docs/dev-vm.rst``).
 - :doc:`../explanation/architecture` - how the pieces fit together.

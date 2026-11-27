@@ -48,8 +48,10 @@ shared library from it. A running workshop's kernel hostname IS the bare
 workshop name - upstream canonical/workshop templates ``/etc/hostname`` from
 ``user.workshop.name``; ``<workshop>.<project>.wp`` is only the DNS-level
 friendly name. Working clones of the profile's repositories live under
-``git/`` of the repo checkout - ``/project/git`` inside the workshop
-container, ``<checkout>/git`` on a host checkout.
+``git/<name>/`` of the repo checkout - ``/project/git/<name>`` inside the
+workshop container, ``<checkout>/git/<name>`` on a host checkout - where
+``<name>`` is the workshop name, so bare profiles and suffixed instances
+keep isolated clone trees.
 
 **The sidecar VM** (sunbeam profile only) is an optional LXD virtual
 machine on the host for the work the container cannot do: craft builds -
